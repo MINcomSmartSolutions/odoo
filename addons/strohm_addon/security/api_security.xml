@@ -1,0 +1,5 @@
+<!-- security/api_security.xml -->
+<record id="group_api_user" model="res.groups">
+    <field name="name">API User</field>
+    <field name="category_id" ref="base.module_category_services"/>
+</record>
