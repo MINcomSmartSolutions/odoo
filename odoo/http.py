@@ -1033,7 +1033,7 @@ class Session(collections.abc.MutableMapping):
            to open a new cursor/registry/env on the given database.
         """
         wsgienv = {
-            'interactive': True,
+            'interactive': False,
             'base_location': request.httprequest.url_root.rstrip('/'),
             'HTTP_HOST': request.httprequest.environ['HTTP_HOST'],
             'REMOTE_ADDR': request.httprequest.environ['REMOTE_ADDR'],
