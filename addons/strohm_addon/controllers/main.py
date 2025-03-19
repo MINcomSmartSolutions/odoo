@@ -23,7 +23,6 @@ _logger = logging.getLogger(__name__)
 
 
 class UserAPI(http.Controller):
-
     def __init__(self):
         super().__init__()
         _logger.info("Initializing UserAPI")
@@ -31,7 +30,7 @@ class UserAPI(http.Controller):
         # Check if de_DE is enabled if not enable it
         lang = request.env['res.lang'].sudo().search([('code', '=', 'de_DE')], limit=1)
         if not lang:
-            # If language doesn't exist. disable the module
+            # If language doesn't exist in the database, raise an error
             _logger.error("German language (de_DE) not found, please install the module")
             raise ValidationError("German language (de_DE) not found, please install the module")
         elif not lang.active:
@@ -210,7 +209,7 @@ class UserAPI(http.Controller):
     #     except Exception as e:
     #         return {'error': str(e), 'code': 500}
 
-    @http.route('/internal/create', type='http', auth='public', methods=['POST', 'GET'], csrf=False)
+    @http.route('/internal/create', type='http', auth='public', methods=['POST'], csrf=False)
     def create_user(self, **kw):
         try:
             # Validate admin token

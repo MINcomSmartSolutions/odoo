@@ -14,6 +14,9 @@
         'web',
         'portal',
     ],
+    'data': [
+        'views/portal_templates.xml',
+    ],
     'external_dependencies': {
         'python': [
             'cryptography',
