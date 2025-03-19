@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Override portal_my_security template to remove password change section -->
+    <template id="custom_sec" inherit_id="portal.portal_my_security" name="Custom Portal Security Fields" active='true'>
+        <!-- Remove password change section -->
+        <xpath expr="//section[@name='portal_change_password']" position="replace">
+            <!-- This removes the password change section -->
+        </xpath>
+
+    </template>
+
+        <!-- Override the TOTP section -->
+    <template id="remove_totp" inherit_id="auth_totp_portal.totp_portal_hook" name="Disable TOTP Portal">
+        <xpath expr="//section[@id='portal_totp']" position="replace">
+        </xpath>
+    </template>
+</odoo>
