@@ -1,13 +1,10 @@
 import base64
-import datetime
 import json
 import os
 
-from passlib.handlers.pbkdf2 import pbkdf2_sha512
-
 # Fix imports
-from odoo import http, _, fields
-from odoo.http import request, Controller, route
+from odoo import http
+from odoo.http import request
 from odoo.exceptions import ValidationError
 import secrets
 from cryptography.fernet import Fernet, InvalidToken
@@ -16,7 +13,6 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 import logging
 import werkzeug.urls
 import werkzeug.utils
-
 from ..models.res_users_apikeys import CustomAPIKeys
 
 _logger = logging.getLogger(__name__)

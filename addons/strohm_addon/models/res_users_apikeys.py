@@ -33,8 +33,8 @@ class CustomAPIKeys(models.Model):
         # Generate the key
         k = binascii.hexlify(os.urandom(API_KEY_SIZE)).decode()
 
-        # Get the target user
-        target_user = self.env['res.users'].browse(user_id)
+        # # Get the target user
+        # target_user = self.env['res.users'].browse(user_id)
 
         self.env.cr.execute("""
         INSERT INTO {table} (name, user_id, scope, expiration_date, key, index)

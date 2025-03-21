@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo noupdate="1">
+    <record id="logout_url" model="ir.config_parameter" forcecreate="1">
+        <field name="key">strohm_addon.logout_url</field>
+        <field name="value">https://google.com</field>
+    </record>
+</odoo>

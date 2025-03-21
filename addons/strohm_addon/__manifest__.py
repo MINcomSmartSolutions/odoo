@@ -16,6 +16,8 @@
     ],
     'data': [
         'views/portal_templates.xml',
+        'views/account_portal_templates.xml',
+        'data/res_config_settings_data.xml',
     ],
     'external_dependencies': {
         'python': [
@@ -27,4 +29,5 @@
     'installable': True,
     'auto_install': True,
     'license': 'LGPL-3',
+    'post_init_hook': '_set_parameters_init_hook',
 }

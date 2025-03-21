@@ -72,6 +72,6 @@ class CustomHome(Home):
         # Ignore any incoming redirect parameter and always use our external URL
         _logger.info("Processing logout request, redirecting to external domain")
 
-        logout_url = request.env['ir.config_parameter'].sudo().get_param('strohm.logout_url')
+        logout_url = request.env['ir.config_parameter'].sudo().get_param('strohm_addon.strohm.logout_url')
 
         return werkzeug.utils.redirect(logout_url + '?successful_logout=true')
