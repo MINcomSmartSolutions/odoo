@@ -2296,7 +2296,7 @@ class APIKeysUser(models.Model):
                 pass
 
         # 'rpc' scope does not really exist, we basically require a global key (scope NULL)
-        if self.env['res.users.apikeys']._check_credentials(scope='rpc', key=credential['token']) == self.env.uid:
+        if self.env['res.users.apikeys']._check_credentials(scope='rpc', key=credential['password']) == self.env.uid:
             return {
                 'uid': self.env.user.id,
                 'auth_method': 'apikey',

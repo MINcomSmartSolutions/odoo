@@ -323,7 +323,8 @@ class UserAPI(http.Controller):
 
             request.httprequest.environ['wsgi.interactive'] = False
 
-            credential = {'login': user.login, 'token': decrypted_key, 'type': 'webauthn'}
+            # Changed 'token' to 'password' to match Odoo's expectation
+            credential = {'login': user.login, 'password': decrypted_key, 'type': 'webauthn'}
 
             # Proper authentication
             request.session.authenticate(request.env.cr.dbname, credential)
