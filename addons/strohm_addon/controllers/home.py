@@ -70,8 +70,9 @@ class CustomHome(Home):
         request.session.logout(keep_db=True)
 
         # Ignore any incoming redirect parameter and always use our external URL
-        _logger.info("Processing logout request, redirecting to external domain")
+        _logger.info("Processing logout request, redirecting ")
 
-        logout_url = request.env['ir.config_parameter'].sudo().get_param('strohm_addon.logout_url')
-
-        return werkzeug.utils.redirect(logout_url + '?successful_logout=true')
+        # FIXME: This URL should be configurable
+        # base_url = request.env['ir.config_parameter'].sudo().get_param('strohm_addon.backend_internal')
+        base_url = 'http://localhost:3000'
+        return werkzeug.utils.redirect(base_url + '/logout?successful_logout=true')
