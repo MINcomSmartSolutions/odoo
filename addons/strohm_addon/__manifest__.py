@@ -13,10 +13,10 @@
         'base',
         'web',
         'portal',
+        'account',
     ],
     'data': [
         'views/portal_templates.xml',
-        'views/account_portal_templates.xml',
         'data/res_config_settings_data.xml',
     ],
     'external_dependencies': {
@@ -27,7 +27,7 @@
     },
     'application': False,
     'installable': True,
-    'auto_install': True,
+    'auto_install': False,
     'license': 'LGPL-3',
     'post_init_hook': '_set_parameters_init_hook',
 }
