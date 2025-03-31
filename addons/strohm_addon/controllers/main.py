@@ -23,12 +23,11 @@ class UserAPI(http.Controller):
         super().__init__()
         _logger.info("Initializing UserAPI")
 
-        # Check if de_DE is enabled if not enable it
+        # Check if de_DE is enabled
         lang = request.env['res.lang'].sudo().search([('code', '=', 'de_DE')], limit=1)
         if not lang:
-            # If language doesn't exist in the database, raise an error
-            _logger.error("German language (de_DE) not found, please install the module")
-            raise ValidationError("German language (de_DE) not found, please install the module")
+            # If language doesn't exist in the database, install it
+            _logger.warning("German language (de_DE) not found, install it")
         elif not lang.active:
             # If language exists but is not active, activate it
             lang.sudo().write({'active': True})
@@ -47,7 +46,7 @@ class UserAPI(http.Controller):
             iterations=6000,
         )
 
-        key = base64.urlsafe_b64encode(kdf.derive(self.api_secret.encode()))
+        key = base64.b64encode(kdf.derive(self.api_secret.encode()))
         f = Fernet(key)
         encrypted_key = f.encrypt(api_key.encode())
 
@@ -62,16 +61,17 @@ class UserAPI(http.Controller):
             raise ValidationError("Encryption verification failed")
 
         return {
-            'key': base64.b64encode(encrypted_key).decode(),
-            'salt': base64.b64encode(salt).decode()
+            'key': base64.urlsafe_b64encode(encrypted_key).decode(),
+            'salt': base64.urlsafe_b64encode(salt).decode()
         }
 
     def _decrypt_api_key(self, encoded_api_key, encoded_salt):
         """Decrypt API key using environment variable secret"""
         try:
             # Decode base64 inputs once
-            encrypted_key = base64.b64decode(encoded_api_key)
-            salt = base64.b64decode(encoded_salt)
+            encrypted_key = base64.urlsafe_b64decode(encoded_api_key)
+            salt = base64.urlsafe_b64decode(encoded_salt)
+
 
             # Derive the same key using PBKDF2
             kdf = PBKDF2HMAC(
@@ -81,7 +81,7 @@ class UserAPI(http.Controller):
                 iterations=6000,
             )
 
-            key = base64.urlsafe_b64encode(kdf.derive(self.api_secret.encode()))
+            key = base64.b64encode(kdf.derive(self.api_secret.encode()))
             f = Fernet(key)
 
             decrypted_key = f.decrypt(encrypted_key).decode()
@@ -210,7 +210,7 @@ class UserAPI(http.Controller):
         try:
             # Validate admin token
             if not self._validate_admin_token(request.httprequest.headers):
-                return {'error': 'Invalid admin token', 'code': 401}
+                return request.make_json_response({'error': 'Invalid admin token'}, status= 401)
 
             data = json.loads(request.httprequest.data)
 
@@ -296,7 +296,7 @@ class UserAPI(http.Controller):
         except Exception as e:
             return request.make_json_response({'error': str(e)}, status=500)
 
-    @http.route('/internal/portal_login', type='http', auth='public', methods=['GET'], csrf=False)
+    @http.route('/portal_login', type='http', auth='public', methods=['GET'], csrf=False)
     def portal_auto_login(self, **kw):
         try:
             # Get encoded API key from URL parameters
