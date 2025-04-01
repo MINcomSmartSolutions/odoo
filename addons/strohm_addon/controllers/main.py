@@ -3,8 +3,8 @@ import json
 import os
 
 # Fix imports
-from odoo import http
-from odoo.http import request
+from odoo import http, fields
+from odoo.http import request, Controller
 from odoo.exceptions import ValidationError
 import secrets
 from cryptography.fernet import Fernet, InvalidToken
@@ -18,7 +18,7 @@ from ..models.res_users_apikeys import CustomAPIKeys
 _logger = logging.getLogger(__name__)
 
 
-class UserAPI(http.Controller):
+class UserAPI(Controller):
     def __init__(self):
         super().__init__()
         _logger.info("Initializing UserAPI")
@@ -147,7 +147,7 @@ class UserAPI(http.Controller):
                 _logger.error("Portal group 'base.group_portal' not found")
                 return False
 
-            # Remove from internal users and add to portal users
+            # Remove the user from internal users grouo and add to portal users group
             user.write({
                 'groups_id': [
                     (3, internal_group.id),  # Remove from internal group
@@ -161,49 +161,58 @@ class UserAPI(http.Controller):
             _logger.error(f"Failed to assign portal group: {str(e)}")
             return False
 
-    # @http.route('/internal/rotate_api_key', type='json', auth='none', methods=['POST'])
-    # def rotate_api_key(self, **kw):
-    #     """Rotate API key for a user"""
-    #     try:
-    #         # Validate admin token
-    #         if not self._validate_admin_token(request.httprequest.headers):
-    #             return {'error': 'Invalid admin token', 'code': 401}
-    #
-    #         user_id = kw.get('user_id')
-    #         if not user_id:
-    #             return {'error': 'Missing user_id', 'code': 400}
-    #
-    #         user = request.env['res.users'].sudo().browse(user_id)
-    #         if not user.exists():
-    #             return {'error': 'User not found', 'code': 404}
-    #
-    #         # Invalidate old keys (optional)
-    #         old_keys = request.env['res.users.apikeys'].sudo().search([
-    #             ('user_id', '=', user.id)
-    #         ])
-    #         if old_keys:
-    #             old_keys.unlink()
-    #
-    #         # Generate and store new API key
-    #         new_api_key = self._generate_api_key()
-    #         request.env['res.users.apikeys'].sudo().create({
-    #             'user_id': user.id,
-    #             'key': new_api_key,
-    #             'create_date': datetime.datetime.now()
-    #         })
-    #
-    #         # Encrypt API key for transport
-    #         encrypted_data = self._encrypt_api_key(new_api_key)
-    #
-    #         return {
-    #             'success': True,
-    #             'user_id': user.id,
-    #             'encrypted_key': encrypted_data['key'],
-    #             'salt': encrypted_data['salt']
-    #         }
-    #
-    #     except Exception as e:
-    #         return {'error': str(e), 'code': 500}
+
+    @http.route('/internal/rotate_api_key', type='http', auth='public', methods=['POST'],csrf=False)
+    def rotate_api_key(self, **kw):
+        """Rotate API key for a user"""
+        try:
+            # Validate admin token
+            if not self._validate_admin_token(request.httprequest.headers):
+                return request.make_json_response({'error': 'Invalid admin token'}, status= 401)
+
+            data = json.loads(request.httprequest.data)
+            user_id = data.get('user_id')
+            encrypted_key = data.get('api_key')
+            salt = data.get('salt')
+
+            if not user_id or not encrypted_key or not salt:
+                raise ValidationError("Missing required parameters")
+
+            decrypted_key = self._decrypt_api_key(encrypted_key, salt)
+
+            # Continue with the existing validation logic
+            user_id = request.env['res.users.apikeys'].sudo()._check_credentials(scope='rpc', key=decrypted_key)
+            if not user_id or not user_id == int(user_id):
+                raise ValidationError("Invalid API key")
+
+            # Set the api keys expiration date to right now to invalidate it
+            request.env['res.users.apikeys'].sudo().search([('user_id', '=', user_id)]).write({'expiration_date': fields.Datetime.now()})
+
+            # Generate new API key
+            new_api_key = request.env['res.users.apikeys'].sudo()._generate_for_user(
+                user_id,
+                'rpc',  # scope
+                'Auto-generated API key',  # name
+                None
+            )
+
+            new_encrypted_data = self._encrypt_api_key(new_api_key)
+
+            # Return the new encrypted API key
+            return request.make_json_response({
+                'success': True,
+                'user_id': user_id,
+                'encrypted_key': new_encrypted_data['key'],
+                'salt': new_encrypted_data['salt']
+            }, status=200)
+
+
+        except ValidationError as ve:
+            return request.make_json_response({'error': str(ve)}, status=400)
+        except Exception as e:
+            _logger.error(f"API key rotation error: {str(e)}", exc_info=True, stack_info=True)
+            return request.make_json_response({'error': str(e)}, status=500)
+
 
     @http.route('/internal/create', type='http', auth='public', methods=['POST'], csrf=False)
     def create_user(self, **kw):
@@ -243,7 +252,6 @@ class UserAPI(http.Controller):
                 'email': data.get('email'),
                 'partner_id': partner.id,
                 'lang': 'de_DE',
-                'password': 'examplePass',  # Placeholder password
                 'active': True,
             }
 
@@ -265,19 +273,6 @@ class UserAPI(http.Controller):
                 'Auto-generated API key',  # name
                 None
             )
-
-            # # Force state to be active by creating login entries
-            # self.env.cr.execute("""
-            #     INSERT INTO res_users_log (create_uid, create_date, write_uid, write_date)
-            #     VALUES (%s, %s, %s, %s, %s, %s)
-            # """, (self.env.uid, fields.Datetime.now(), self.env.uid, fields.Datetime.now(), user.id, '127.0.0.1'))
-
-            # # Also set login_date
-            # user.write({'login_date': fields.Datetime.now()})
-            #
-            # # Set password as API key
-            # user.sudo().write({'totp_secret': False,
-            #                    'totp_enabled': False})
 
             # Encrypt API key for transport, this encryption is done by us (independent of odoo framework)
             encrypted_data = self._encrypt_api_key(api_key)
