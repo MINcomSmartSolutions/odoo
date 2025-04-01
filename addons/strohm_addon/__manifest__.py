@@ -1,7 +1,7 @@
 # noinspection PyStatementEffect
 {
     'name': "Ladeabrechnung Integration",
-    'summary': "API integration for user management and authorization",
+    'summary': "Integration for Ladeabrechnung",
     'description': """
         WIP
     """,
@@ -17,7 +17,6 @@
     ],
     'data': [
         'views/portal_templates.xml',
-        'data/res_config_settings_data.xml',
     ],
     'external_dependencies': {
         'python': [

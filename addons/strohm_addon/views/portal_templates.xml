@@ -7,9 +7,31 @@
             <!-- This removes the password change section -->
         </xpath>
 
+        <!-- Override the account deactivation section to remove password verification -->
+        <xpath expr="//section[@name='portal_deactivate_account']//form//p[1]" position="replace">
+            <!-- Remove the password verification text -->
+        </xpath>
+
+        <xpath expr="//section[@name='portal_deactivate_account']//input[@name='password']" position="replace">
+            <!-- Remove the password input field -->
+        </xpath>
+
+<!--        <xpath expr="//section[@name='portal_deactivate_account']//div[@t-if='deactivate_error == &quot;password&quot;']" position="replace">-->
+<!--            &lt;!&ndash; Remove password error message &ndash;&gt;-->
+<!--        </xpath>-->
+
+        <xpath expr="//section[@name='portal_deactivate_account']//form//hr[1]" position="replace">
+            <!-- Remove first divider -->
+        </xpath>
+
+        <!-- Modify confirmation numbering -->
+        <xpath expr="//section[@name='portal_deactivate_account']//form//p[1]" position="replace">
+        </xpath>
+
+
     </template>
 
-        <!-- Override the TOTP section -->
+    <!-- Override the TOTP section -->
     <template id="remove_totp" inherit_id="auth_totp_portal.totp_portal_hook" name="Disable TOTP Portal">
         <xpath expr="//section[@id='portal_totp']" position="replace">
         </xpath>

@@ -2,19 +2,22 @@
 import os
 
 import werkzeug
+from werkzeug import urls
 
-from odoo import http
+from odoo import http, _
 from odoo.http import request
 from odoo.addons.web.controllers.home import Home
 from werkzeug.utils import redirect
 
 import logging
+
 _logger = logging.getLogger(__name__)
 
 
 class CustomHome(Home):
     def __init__(self):
-        self.DOODBA_ENV =  os.environ.get('DOODBA_ENVIRONMENT')
+        self.DOODBA_ENV = os.environ.get('DOODBA_ENVIRONMENT')
+        self.BACKEND_URL = os.environ.get('BACKEND_URL')
 
     def _validate_redirect(self, redirect_url):
         """Validate that redirect URL is safe"""
@@ -32,7 +35,6 @@ class CustomHome(Home):
         parsed = werkzeug.urls.url_parse(redirect_url)
         return (not parsed.scheme or parsed.scheme in allowed_schemes) and \
             (not parsed.netloc or parsed.netloc in allowed_hosts)
-
 
     @http.route('/web/admin_login', type='http', auth='none')
     def web_admin_login(self, redirect=None, **kw):
@@ -61,18 +63,22 @@ class CustomHome(Home):
             return super(CustomHome, self).web_login(redirect=redirect, **kw)
 
         # Redirect GET requests to admin_login
-        return request.redirect('/web/admin_login')
+        return werkzeug.utils.redirect(self.BACKEND_URL)
 
     @http.route('/web/session/logout', type='http', auth='user')
     def logout(self, redirect=None, **kw):
         """Override logout to redirect to external URL after session destroy
-        regardless of any redirect parameter"""
+        for regular users, and to admin login for admin users"""
+        user = request.env.user
+        is_admin = user.has_group('base.group_system')
+
         request.session.logout(keep_db=True)
 
-        # Ignore any incoming redirect parameter and always use our external URL
-        _logger.info("Processing logout request, redirecting ")
+        # For admin users, redirect to admin login
+        if is_admin:
+            _logger.info("Admin logout, redirecting to admin login page")
+            return request.redirect('/web/admin_login')
 
-        # FIXME: This URL should be configurable
-        # base_url = request.env['ir.config_parameter'].sudo().get_param('strohm_addon.backend_internal')
-        base_url = 'http://localhost:3000'
-        return werkzeug.utils.redirect(base_url + '/logout?successful_logout=true')
+        # For regular users, redirect to external URL
+        _logger.info("User logout, redirecting to external URL")
+        return werkzeug.utils.redirect(self.BACKEND_URL + '/logout')

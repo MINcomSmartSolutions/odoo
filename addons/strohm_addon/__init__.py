@@ -1,6 +1,7 @@
 from . import controllers
 from . import models
 import logging
+
 _logger = logging.getLogger(__name__)
 
 
@@ -26,3 +27,13 @@ def _set_parameters_init_hook(env):
             digests.write({'state': 'deactivated'})
     except Exception as e:
         _logger.warning("Failed to deactivate digest.digest records: %s", e)
+
+    # Disable portal API key generation
+    try:
+        disable_portal_apikeys = bool(env['ir.config_parameter'].sudo().set_param('portal.allow_api_keys', 'False'))
+        if disable_portal_apikeys:
+            _logger.info("Successfully disabled portal API key generation")
+        else:
+            _logger.warning("Failed to disable portal API key generation")
+    except Exception as e:
+        _logger.warning("Failed to disable portal API key generation %s", e)
