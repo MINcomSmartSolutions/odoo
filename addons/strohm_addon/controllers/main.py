@@ -1,6 +1,9 @@
 import base64
+import hashlib
+import hmac
 import json
 import os
+import time
 
 # Fix imports
 from odoo import http, fields
@@ -161,6 +164,14 @@ class UserAPI(Controller):
             _logger.error(f"Failed to assign portal group: {str(e)}")
             return False
 
+    def _generate_signature(self, state, timestamp):
+        """Generate HMAC signature with your secret key"""
+        message = f"{state}:{timestamp}".encode()
+        return hmac.new(
+            self.api_secret.encode(),
+            message,
+            hashlib.sha256
+        ).hexdigest()
 
     @http.route('/internal/rotate_api_key', type='http', auth='public', methods=['POST'],csrf=False)
     def rotate_api_key(self, **kw):
@@ -294,11 +305,23 @@ class UserAPI(Controller):
     @http.route('/portal_login', type='http', auth='public', methods=['GET'], csrf=False)
     def portal_auto_login(self, **kw):
         try:
-            # Get encoded API key from URL parameters
             encoded_api_key = kw.get('api_key')
             encoded_salt = kw.get('salt')
-            if not encoded_api_key or not encoded_salt:
+            state = kw.get('state')
+            timestamp = kw.get('timestamp')
+            signature = kw.get('signature')
+
+            if not encoded_api_key or not encoded_salt or not state or not timestamp or not signature:
                 return request.make_json_response({'error': 'Missing parameters'}, status=401)
+
+            # Verify timestamp isn't too old (5-minute window)
+            if int(time.time()) - int(timestamp) > 300:
+                return request.make_json_response({'error': 'Link expired'}, status=403)
+
+            # Verify signature
+            expected_signature = self._generate_signature(state, timestamp)
+            if not secrets.compare_digest(signature, expected_signature):
+                return request.make_json_response({'error': 'Invalid signature'}, status=403)
 
             decrypted_key = self._decrypt_api_key(encoded_api_key, encoded_salt)
 
