@@ -348,7 +348,7 @@ class UserAPI(Controller):
             request.session.authenticate(request.env.cr.dbname, credential)
             _logger.debug('🔑 User authenticated successfully')
 
-            # Update session information
+            # TODO: Do we need to create session everytime we login?
             request.env.user = user
             request.session.session_token = user._compute_session_token(request.session.sid)
             request.session.uid = user.id
