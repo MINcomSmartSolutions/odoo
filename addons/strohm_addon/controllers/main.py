@@ -1,4 +1,5 @@
 import base64
+from datetime import datetime
 import hashlib
 import hmac
 import json
@@ -164,11 +165,20 @@ class UserAPI(Controller):
             _logger.error(f"Failed to assign portal group: {str(e)}")
             return False
 
-    def _generate_signature(self, state, timestamp):
-        """Generate HMAC signature with your secret key"""
-        message = f"{state}:{timestamp}".encode()
+    def _generate_signature(self, state, secret):
+        """
+        Generate HMAC signature for authentication validation.
+
+        Args:
+            state (dict): Dictionary containing 'key', 'timestamp', 'odoo_user_id' and 'salt'
+            secret (bytes): Secret key used for generating the signature
+
+        Returns:
+            str: Hexadecimal digest of the HMAC signature
+        """
+        message = f"{state['key']}{state['timestamp']}{state['odoo_user_id']}{state['salt']}".encode()
         return hmac.new(
-            self.api_secret.encode(),
+            secret,
             message,
             hashlib.sha256
         ).hexdigest()
@@ -204,7 +214,7 @@ class UserAPI(Controller):
                 user_id,
                 'rpc',  # scope
                 'Auto-generated API key',  # name
-                None
+                None #TODO: Set a viable expiration_date
             )
 
             new_encrypted_data = self._encrypt_api_key(new_api_key)
@@ -282,7 +292,7 @@ class UserAPI(Controller):
                 user.id,
                 'rpc',  # scope
                 'Auto-generated API key',  # name
-                None
+                None #TODO: Set a viable expiration_date
             )
 
             # Encrypt API key for transport, this encryption is done by us (independent of odoo framework)
@@ -305,23 +315,20 @@ class UserAPI(Controller):
     @http.route('/portal_login', type='http', auth='public', methods=['GET'], csrf=False)
     def portal_auto_login(self, **kw):
         try:
-            encoded_api_key = kw.get('api_key')
-            encoded_salt = kw.get('salt')
-            state = kw.get('state')
-            timestamp = kw.get('timestamp')
-            signature = kw.get('signature')
+            encoded_api_key = str(kw.get('api_key'))
+            encoded_salt = str(kw.get('salt'))
+            timestamp = str(kw.get('timestamp'))
+            signature = str(kw.get('signature'))
 
-            if not encoded_api_key or not encoded_salt or not state or not timestamp or not signature:
+            if not encoded_api_key or not encoded_salt or not timestamp or not signature:
                 return request.make_json_response({'error': 'Missing parameters'}, status=401)
 
             # Verify timestamp isn't too old (5-minute window)
-            if int(time.time()) - int(timestamp) > 300:
+            # Parse ISO timestamp to Unix time
+            timestamp_dt = datetime.strptime(timestamp, "%Y%m%dT%H:%M:%S")
+            timestamp_unix = int(timestamp_dt.timestamp())
+            if int(time.time()) - timestamp_unix > 300:
                 return request.make_json_response({'error': 'Link expired'}, status=403)
-
-            # Verify signature
-            expected_signature = self._generate_signature(state, timestamp)
-            if not secrets.compare_digest(signature, expected_signature):
-                return request.make_json_response({'error': 'Invalid signature'}, status=403)
 
             decrypted_key = self._decrypt_api_key(encoded_api_key, encoded_salt)
 
@@ -332,6 +339,17 @@ class UserAPI(Controller):
 
             if not user_id:
                 raise ValidationError("Invalid API key")
+
+            # Verify signature
+            expected_signature = self._generate_signature({
+                'key': encoded_api_key,
+                'timestamp': timestamp,
+                'odoo_user_id': user_id,
+                'salt': encoded_salt,
+            }, self.api_secret.encode())
+
+            if not secrets.compare_digest(signature, expected_signature):
+                return request.make_json_response({'error': 'Invalid signature'}, status=403)
 
             _logger.debug(f"🔑 User ID: {user_id}")
 
