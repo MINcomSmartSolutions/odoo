@@ -26,6 +26,7 @@ class UserAPI(Controller):
     def __init__(self):
         super().__init__()
         _logger.info("Initializing UserAPI")
+        self.datetime_format = "%Y%m%dT%H:%M:%S"
 
         # Check if de_DE is enabled
         lang = request.env['res.lang'].sudo().search([('code', '=', 'de_DE')], limit=1)
@@ -75,7 +76,6 @@ class UserAPI(Controller):
             # Decode base64 inputs once
             encrypted_key = base64.urlsafe_b64decode(encoded_api_key)
             salt = base64.urlsafe_b64decode(encoded_salt)
-
 
             # Derive the same key using PBKDF2
             kdf = PBKDF2HMAC(
@@ -165,7 +165,7 @@ class UserAPI(Controller):
             _logger.error(f"Failed to assign portal group: {str(e)}")
             return False
 
-    def _generate_signature(self, state, secret):
+    def _generate_signature(self, message, secret):
         """
         Generate HMAC signature for authentication validation.
 
@@ -176,20 +176,19 @@ class UserAPI(Controller):
         Returns:
             str: Hexadecimal digest of the HMAC signature
         """
-        message = f"{state['key']}{state['timestamp']}{state['odoo_user_id']}{state['salt']}".encode()
         return hmac.new(
             secret,
             message,
             hashlib.sha256
         ).hexdigest()
 
-    @http.route('/internal/rotate_api_key', type='http', auth='public', methods=['POST'],csrf=False)
+    @http.route('/internal/rotate_api_key', type='http', auth='public', methods=['POST'], csrf=False)
     def rotate_api_key(self, **kw):
         """Rotate API key for a user"""
         try:
             # Validate admin token
             if not self._validate_admin_token(request.httprequest.headers):
-                return request.make_json_response({'error': 'Invalid admin token'}, status= 401)
+                return request.make_json_response({'error': 'Invalid admin token'}, status=401)
 
             data = json.loads(request.httprequest.data)
             user_id = data.get('user_id')
@@ -207,14 +206,15 @@ class UserAPI(Controller):
                 raise ValidationError("Invalid API key")
 
             # Set the api keys expiration date to right now to invalidate it
-            request.env['res.users.apikeys'].sudo().search([('user_id', '=', user_id)]).write({'expiration_date': fields.Datetime.now()})
+            request.env['res.users.apikeys'].sudo().search([('user_id', '=', user_id)]).write(
+                {'expiration_date': fields.Datetime.now()})
 
             # Generate new API key
             new_api_key = request.env['res.users.apikeys'].sudo()._generate_for_user(
                 user_id,
                 'rpc',  # scope
                 'Auto-generated API key',  # name
-                None #TODO: Set a viable expiration_date
+                None  # TODO: Set a viable expiration_date
             )
 
             new_encrypted_data = self._encrypt_api_key(new_api_key)
@@ -234,13 +234,12 @@ class UserAPI(Controller):
             _logger.error(f"API key rotation error: {str(e)}", exc_info=True, stack_info=True)
             return request.make_json_response({'error': str(e)}, status=500)
 
-
     @http.route('/internal/create', type='http', auth='public', methods=['POST'], csrf=False)
     def create_user(self, **kw):
         try:
             # Validate admin token
             if not self._validate_admin_token(request.httprequest.headers):
-                return request.make_json_response({'error': 'Invalid admin token'}, status= 401)
+                return request.make_json_response({'error': 'Invalid admin token'}, status=401)
 
             data = json.loads(request.httprequest.data)
 
@@ -292,18 +291,24 @@ class UserAPI(Controller):
                 user.id,
                 'rpc',  # scope
                 'Auto-generated API key',  # name
-                None #TODO: Set a viable expiration_date
+                None  # TODO: Set a viable expiration_date
             )
 
             # Encrypt API key for transport, this encryption is done by us (independent of odoo framework)
             encrypted_data = self._encrypt_api_key(api_key)
+            _datetime = datetime.now().strftime(self.datetime_format)
+            _hash = self._generate_signature(
+                f"{_datetime}{user.id}{partner.id}{encrypted_data['key']}{encrypted_data['salt']}".encode(),
+                self.api_secret.encode()
+            )
 
             return request.make_json_response({
-                'success': True,
+                'timestamp': _datetime,
                 'user_id': user.id,
                 'partner_id': partner.id,
                 'encrypted_key': encrypted_data['key'],
-                'salt': encrypted_data['salt']
+                'salt': encrypted_data['salt'],
+                'hash': _hash,
             }, status=201)
 
 
@@ -325,7 +330,7 @@ class UserAPI(Controller):
 
             # Verify timestamp isn't too old (5-minute window)
             # Parse ISO timestamp to Unix time
-            timestamp_dt = datetime.strptime(timestamp, "%Y%m%dT%H:%M:%S")
+            timestamp_dt = datetime.strptime(timestamp, self.datetime_format)
             timestamp_unix = int(timestamp_dt.timestamp())
             if int(time.time()) - timestamp_unix > 300:
                 return request.make_json_response({'error': 'Link expired'}, status=403)
@@ -340,13 +345,14 @@ class UserAPI(Controller):
             if not user_id:
                 raise ValidationError("Invalid API key")
 
+            # Create the message that was used for the signature
+            message = f"{timestamp}{user_id}{encoded_api_key}{encoded_salt}".encode()
+
             # Verify signature
-            expected_signature = self._generate_signature({
-                'key': encoded_api_key,
-                'timestamp': timestamp,
-                'odoo_user_id': user_id,
-                'salt': encoded_salt,
-            }, self.api_secret.encode())
+            expected_signature = self._generate_signature(
+                message,
+                self.api_secret.encode(),
+            )
 
             if not secrets.compare_digest(signature, expected_signature):
                 return request.make_json_response({'error': 'Invalid signature'}, status=403)
