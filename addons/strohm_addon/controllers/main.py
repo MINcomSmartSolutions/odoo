@@ -38,26 +38,26 @@ class UserAPI(Controller):
             lang.sudo().write({'active': True})
             _logger.debug("German language (de_DE) activated")
 
-        self.api_secret = os.environ.get('ODOO_API_SECRET')
+        self.API_SECRET = os.environ.get('ODOO_API_SECRET')
 
     def _encrypt_api_key(self, api_key):
         """Encrypt API key using environment variable secret"""
 
-        salt = secrets.token_bytes(16)
+        salt = self._generate_salt()
         kdf = PBKDF2HMAC(
-            algorithm=hashes.SHA512(),
+            algorithm=hashes.SHA256(),
             length=32,
             salt=salt,
             iterations=6000,
         )
 
-        key = base64.b64encode(kdf.derive(self.api_secret.encode()))
+        key = base64.b64encode(kdf.derive(self.API_SECRET.encode()))
         f = Fernet(key)
         encrypted_key = f.encrypt(api_key.encode())
 
         # Verify encryption by decrypting and comparing
         try:
-            decrypted = f.decrypt(encrypted_key).decode()
+            decrypted = f.decrypt(encrypted_key).decode('utf-8')
             if decrypted != api_key:
                 _logger.error("Encryption verification failed: decrypted key doesn't match original")
                 raise ValueError("Encryption verification failed")
@@ -66,11 +66,14 @@ class UserAPI(Controller):
             raise ValidationError("Encryption verification failed")
 
         return {
-            'key': base64.urlsafe_b64encode(encrypted_key).decode(),
-            'salt': base64.urlsafe_b64encode(salt).decode()
+            'key': base64.urlsafe_b64encode(encrypted_key).decode('utf-8'),
+            'key_salt': base64.urlsafe_b64encode(salt).decode('utf-8')
         }
 
     def _decrypt_api_key(self, encoded_api_key, encoded_salt):
+        _logger.info("🔑 Decrypting API key")
+        _logger.info(encoded_api_key)
+        _logger.info(encoded_salt)
         """Decrypt API key using environment variable secret"""
         try:
             # Decode base64 inputs once
@@ -79,13 +82,13 @@ class UserAPI(Controller):
 
             # Derive the same key using PBKDF2
             kdf = PBKDF2HMAC(
-                algorithm=hashes.SHA512(),
+                algorithm=hashes.SHA256(),
                 length=32,
                 salt=salt,
                 iterations=6000,
             )
 
-            key = base64.b64encode(kdf.derive(self.api_secret.encode()))
+            key = base64.b64encode(kdf.derive(self.API_SECRET.encode()))
             f = Fernet(key)
 
             decrypted_key = f.decrypt(encrypted_key).decode()
@@ -104,23 +107,23 @@ class UserAPI(Controller):
 
         token = auth_header.split(' ')[1]
 
-        _logger.debug(f"🔑 Provided Token: {token}")
+        _logger.info(f"🔑 Provided Token: {token}")
 
         # Verify token using _check_credentials
         admin_id = request.env['res.users.apikeys'].sudo()._check_credentials(scope='rpc', key=token)
         if not admin_id:
-            _logger.debug("❌ Token verification failed.")
+            _logger.info("❌ Token verification failed.")
             return False
 
-        _logger.debug("✅ Token verification succeeded.")
+        _logger.info("✅ Token verification succeeded.")
 
         # Update request environment with the authenticated user
         admin = request.env['res.users'].sudo().browse(admin_id)
         if not admin.has_group('base.group_system'):
-            _logger.debug("❌ Admin doesn't have system access.")
+            _logger.info("❌ Admin doesn't have system access.")
             return False
 
-        _logger.debug("✅ Admin has system access.")
+        _logger.info("✅ Admin has system access.")
         request.update_env(user=admin)
         return True
 
@@ -165,22 +168,51 @@ class UserAPI(Controller):
             _logger.error(f"Failed to assign portal group: {str(e)}")
             return False
 
-    def _generate_signature(self, message, secret):
+    def _generate_hash(self, message, secret=None):
         """
         Generate HMAC signature for authentication validation.
 
         Args:
-            state (dict): Dictionary containing 'key', 'timestamp', 'odoo_user_id' and 'salt'
+            message (string): Message to be signed
             secret (bytes): Secret key used for generating the signature
 
         Returns:
             str: Hexadecimal digest of the HMAC signature
         """
+
+        if secret is None:
+            secret = self.API_SECRET.encode()
+
         return hmac.new(
             secret,
-            message,
+            message.encode(),
             hashlib.sha256
         ).hexdigest()
+
+    def _generate_salt(self, decode=False):
+        """Create a random salt for encryption"""
+        salt = secrets.token_bytes(16)
+        if decode:
+            return base64.urlsafe_b64encode(salt).decode('utf-8')
+        return salt
+
+    def _validate_hash(self, hash, message, secret=None):
+        """
+        Validate HMAC signature for authentication validation.
+
+        Args:
+            hash (str): Hexadecimal digest of the HMAC signature
+            message (str): Message used for generating the signature
+            secret (bytes): Secret key used for generating the signature
+
+        Returns:
+            bool: True if the hash is valid, False otherwise
+        """
+        if secret is None:
+            secret = self.API_SECRET.encode()
+
+        expected_hash = self._generate_hash(message, secret)
+        return secrets.compare_digest(hash, expected_hash)
 
     @http.route('/internal/rotate_api_key', type='http', auth='public', methods=['POST'], csrf=False)
     def rotate_api_key(self, **kw):
@@ -191,19 +223,27 @@ class UserAPI(Controller):
                 return request.make_json_response({'error': 'Invalid admin token'}, status=401)
 
             data = json.loads(request.httprequest.data)
-            user_id = data.get('user_id')
-            encrypted_key = data.get('api_key')
-            salt = data.get('salt')
 
-            if not user_id or not encrypted_key or not salt:
+            timestamp = data.get('timestamp')
+            user_id = data.get('user_id')
+            encrypted_key = data.get('key')
+            key_salt = data.get('key_salt')
+            salt = data.get('salt')
+            hash = data.get('hash')
+
+            if not user_id or not encrypted_key or not key_salt or not timestamp or not hash or not salt:
                 raise ValidationError("Missing required parameters")
 
-            decrypted_key = self._decrypt_api_key(encrypted_key, salt)
+            decrypted_key = self._decrypt_api_key(encrypted_key, key_salt)
 
             # Continue with the existing validation logic
             user_id = request.env['res.users.apikeys'].sudo()._check_credentials(scope='rpc', key=decrypted_key)
-            if not user_id or not user_id == int(user_id):
+            if not user_id == int(user_id):
                 raise ValidationError("Invalid API key")
+
+            message = f"{timestamp}{user_id}{encrypted_key}{key_salt}{salt}"
+            if not (self._validate_hash(hash, message)):
+                return request.make_json_response({'error': 'Invalid signature'}, status=403)
 
             # Set the api keys expiration date to right now to invalidate it
             request.env['res.users.apikeys'].sudo().search([('user_id', '=', user_id)]).write(
@@ -213,18 +253,27 @@ class UserAPI(Controller):
             new_api_key = request.env['res.users.apikeys'].sudo()._generate_for_user(
                 user_id,
                 'rpc',  # scope
-                'Auto-generated API key',  # name
+                'Auto-generated User API key',  # name
                 None  # TODO: Set a viable expiration_date
             )
 
-            new_encrypted_data = self._encrypt_api_key(new_api_key)
+            timestamp = datetime.utcnow().strftime(self.datetime_format)
+            _salt = self._generate_salt(decode=True)
+            new_encrypted_token_data = self._encrypt_api_key(new_api_key)
+
+            _hash = self._generate_hash(
+                f"{timestamp}{user_id}{new_encrypted_token_data['key']}{new_encrypted_token_data['key_salt']}{_salt}",
+            )
 
             # Return the new encrypted API key
             return request.make_json_response({
                 'success': True,
+                'timestamp': timestamp,
                 'user_id': user_id,
-                'encrypted_key': new_encrypted_data['key'],
-                'salt': new_encrypted_data['salt']
+                'key': new_encrypted_token_data['key'],
+                'key_salt': new_encrypted_token_data['key_salt'],
+                'salt': _salt,
+                'hash': _hash,
             }, status=200)
 
 
@@ -234,7 +283,7 @@ class UserAPI(Controller):
             _logger.error(f"API key rotation error: {str(e)}", exc_info=True, stack_info=True)
             return request.make_json_response({'error': str(e)}, status=500)
 
-    @http.route('/internal/create', type='http', auth='public', methods=['POST'], csrf=False)
+    @http.route('/internal/user/create', type='http', auth='public', methods=['POST'], csrf=False)
     def create_user(self, **kw):
         try:
             # Validate admin token
@@ -290,24 +339,31 @@ class UserAPI(Controller):
             api_key = request.env['res.users.apikeys'].sudo()._generate_for_user(
                 user.id,
                 'rpc',  # scope
-                'Auto-generated API key',  # name
+                'Auto-generated User API key',  # name
                 None  # TODO: Set a viable expiration_date
             )
 
             # Encrypt API key for transport, this encryption is done by us (independent of odoo framework)
-            encrypted_data = self._encrypt_api_key(api_key)
+            encrypted_token_data = self._encrypt_api_key(api_key)
             _datetime = datetime.now().strftime(self.datetime_format)
-            _hash = self._generate_signature(
-                f"{_datetime}{user.id}{partner.id}{encrypted_data['key']}{encrypted_data['salt']}".encode(),
-                self.api_secret.encode()
+            _salt = self._generate_salt(decode=True)
+            _hash = self._generate_hash(
+                f"{_datetime}{user.id}{partner.id}{encrypted_token_data['key']}{encrypted_token_data['key_salt']}{_salt}",
             )
 
+            # _logger.info("🔑 API key encrypted successfully")
+            # _logger.info(f"🔑 User ID: {user.id}")
+            # _logger.info(f"🔑 Encrypted API key: {encrypted_token_data['key']}")
+            # _logger.info(f"🔑 Encrypted API key salt: {encrypted_token_data['key_salt']}")
+            # _logger.info(f"🔑 Encrypted API key salt: {_salt}")
+            # _logger.info(f"🔑 Encrypted API key hash: {_hash}")
             return request.make_json_response({
                 'timestamp': _datetime,
                 'user_id': user.id,
                 'partner_id': partner.id,
-                'encrypted_key': encrypted_data['key'],
-                'salt': encrypted_data['salt'],
+                'key': encrypted_token_data['key'],
+                'key_salt': encrypted_token_data['key_salt'],
+                'salt': _salt,
                 'hash': _hash,
             }, status=201)
 
@@ -315,17 +371,19 @@ class UserAPI(Controller):
         except ValidationError as ve:
             return request.make_json_response({'error': str(ve)}, status=400)
         except Exception as e:
+            _logger.error(f"User creation error: {str(e)}", exc_info=True, stack_info=True)
             return request.make_json_response({'error': str(e)}, status=500)
 
     @http.route('/portal_login', type='http', auth='public', methods=['GET'], csrf=False)
     def portal_auto_login(self, **kw):
         try:
-            encoded_api_key = str(kw.get('api_key'))
-            encoded_salt = str(kw.get('salt'))
             timestamp = str(kw.get('timestamp'))
-            signature = str(kw.get('signature'))
+            encrypted_api_key = str(kw.get('key'))
+            key_salt = kw.get('key_salt')
+            salt = str(kw.get('salt'))
+            hash = str(kw.get('hash'))
 
-            if not encoded_api_key or not encoded_salt or not timestamp or not signature:
+            if not encrypted_api_key or not key_salt or not timestamp or not hash:
                 return request.make_json_response({'error': 'Missing parameters'}, status=401)
 
             # Verify timestamp isn't too old (5-minute window)
@@ -335,7 +393,7 @@ class UserAPI(Controller):
             if int(time.time()) - timestamp_unix > 300:
                 return request.make_json_response({'error': 'Link expired'}, status=403)
 
-            decrypted_key = self._decrypt_api_key(encoded_api_key, encoded_salt)
+            decrypted_key = self._decrypt_api_key(encrypted_api_key, key_salt)
 
             _logger.debug('🔑 API key decrypted successfully')
 
@@ -346,15 +404,8 @@ class UserAPI(Controller):
                 raise ValidationError("Invalid API key")
 
             # Create the message that was used for the signature
-            message = f"{timestamp}{user_id}{encoded_api_key}{encoded_salt}".encode()
-
-            # Verify signature
-            expected_signature = self._generate_signature(
-                message,
-                self.api_secret.encode(),
-            )
-
-            if not secrets.compare_digest(signature, expected_signature):
+            message = f"{timestamp}{user_id}{encrypted_api_key}{key_salt}{salt}"
+            if not (self._validate_hash(hash, message)):
                 return request.make_json_response({'error': 'Invalid signature'}, status=403)
 
             _logger.debug(f"🔑 User ID: {user_id}")

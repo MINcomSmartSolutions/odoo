@@ -8,7 +8,7 @@ import logging
 
 _logger = logging.getLogger(__name__)
 
-#TODO: Needs more debugging and network between odoo and backend conatainer
+#TODO: Needs more debugging, and network between odoo and backend container
 class ResPartner(models.Model):
     _inherit = 'res.partner'
 
