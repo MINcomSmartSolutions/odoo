@@ -57,7 +57,7 @@ class UserAPI(Controller):
 
         # Verify encryption by decrypting and comparing
         try:
-            decrypted = f.decrypt(encrypted_key).decode('utf-8')
+            decrypted = f.decrypt(encrypted_key).decode()
             if decrypted != api_key:
                 _logger.error("Encryption verification failed: decrypted key doesn't match original")
                 raise ValueError("Encryption verification failed")
@@ -66,8 +66,8 @@ class UserAPI(Controller):
             raise ValidationError("Encryption verification failed")
 
         return {
-            'key': base64.urlsafe_b64encode(encrypted_key).decode('utf-8'),
-            'key_salt': base64.urlsafe_b64encode(salt).decode('utf-8')
+            'key': base64.urlsafe_b64encode(encrypted_key).decode(),
+            'key_salt': base64.urlsafe_b64encode(salt).decode()
         }
 
     def _decrypt_api_key(self, encoded_api_key, encoded_salt):
