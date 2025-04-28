@@ -8,6 +8,9 @@ _logger = logging.getLogger(__name__)
 def _set_parameters_init_hook(env):
     """Code to execute when the module is installed"""
 
+    env.context = dict(env.context, lang='de_DE')
+    env.context = dict(env.context, tz='Europe/Berlin')
+
     # Disable default digest emails
     try:
         env['ir.config_parameter'].set_param('digest.default_digest_emails', 'False')

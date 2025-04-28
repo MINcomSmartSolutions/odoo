@@ -1,6 +1,6 @@
-<odoo>
-    <template id="portal_my_details_fields" inherit_id="portal.portal_my_details_fields">
-        <xpath expr="//div[@id='invoice_sending_method']" position="replace">
-        </xpath>
-    </template>
-</odoo>
+<!--<odoo>-->
+<!--    <template id="portal_my_details_fields" inherit_id="portal.portal_my_details_fields">-->
+<!--        <xpath expr="//div[@id='invoice_sending_method']" position="replace">-->
+<!--        </xpath>-->
+<!--    </template>-->
+<!--</odoo>-->

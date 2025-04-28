@@ -154,5 +154,6 @@
         <field name="category_id" ref="uom.product_uom_categ_unit"/>
         <field name="uom_type">bigger</field>
       </record>
+
     </data>
 </odoo>

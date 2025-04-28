@@ -107,8 +107,6 @@ class UserAPI(Controller):
 
         token = auth_header.split(' ')[1]
 
-        _logger.info(f"🔑 Provided Token: {token}")
-
         # Verify token using _check_credentials
         admin_id = request.env['res.users.apikeys'].sudo()._check_credentials(scope='rpc', key=token)
         if not admin_id:
@@ -440,4 +438,79 @@ class UserAPI(Controller):
             return request.make_json_response({'error': str(ve)}, status=400)
         except Exception as e:
             _logger.error(f"Portal login error: {str(e)}", exc_info=True, stack_info=True)
+            return request.make_json_response({'error': str(e)}, status=500)
+
+    @http.route('/internal/bill/create', type='http', auth='public', methods=['POST'], csrf=False)
+    def create_bill(self, **kw):
+        try:
+            data = json.loads(request.httprequest.data)
+
+            lines_data = data.get('lines_data')
+            timestamp = str(data.get('timestamp'))
+            encrypted_api_key = str(data.get('key'))
+            key_salt = str(data.get('key_salt'))
+            req_session_start = data.get('session_start')
+            req_session_end = data.get('session_end')
+
+            # Validate required fields
+            session_start = datetime.strptime(req_session_start, self.datetime_format)
+            session_end = datetime.strptime(req_session_end, self.datetime_format)
+
+            # salt = str(data.get('salt'))
+            # hash = str(data.get('hash'))
+
+            # if not lines_data or not encrypted_api_key or not key_salt or not timestamp or not hash or not salt:
+            #     raise ValidationError("Missing required parameters")
+
+            # Verify timestamp isn't too old (5-minute window)
+            # Parse ISO timestamp to Unix time
+            timestamp_dt = datetime.strptime(timestamp, self.datetime_format)
+            timestamp_unix = int(timestamp_dt.timestamp())
+            if int(time.time()) - timestamp_unix > 300:
+                return request.make_json_response({'error': 'Link expired'}, status=403)
+
+            decrypted_key = self._decrypt_api_key(encrypted_api_key, key_salt)
+            _logger.debug('🔑 API key decrypted successfully')
+
+            # Continue with the existing validation logic
+            user_id = request.env['res.users.apikeys'].sudo()._check_credentials(scope='rpc', key=decrypted_key)
+            partner_id = request.env['res.users'].sudo().browse(user_id).partner_id.id
+
+            if not user_id or not partner_id:
+                raise ValidationError("Invalid API key")
+
+            # Create the message that was used for the signature
+            # message = f"{timestamp}{user_id}{partner_id}{encrypted_api_key}{key_salt}"
+            # if not self._validate_hash(hash, message):
+            #     return request.make_json_response({'error': 'Invalid signature'}, status=403)
+
+            _logger.debug(f"🔑 User ID: {user_id}")
+
+            user = request.env['res.users'].sudo().browse(user_id)
+            if not user.exists():
+                return request.make_json_response({'error': 'User not found'}, status=404)
+
+            request.httprequest.environ['wsgi.interactive'] = False
+
+            # Changed 'token' to 'password' to match Odoo's expectation
+            credential = {'login': user.login, 'password': decrypted_key, 'type': 'webauthn'}
+
+            # Proper authentication
+            request.session.authenticate(request.env.cr.dbname, credential)
+            _logger.debug('🔑 User authenticated successfully')
+
+            # Generate the bill using the model method
+            bill = request.env['charging.session.invoice'].sudo().generate(session_start, session_end, partner_id,
+                                                                           lines_data)
+
+            return request.make_json_response({
+                'success': True,
+                'bill_id': bill.id,
+                'message': "Bill created successfully"
+            }, status=201)
+
+        except ValidationError as ve:
+            return request.make_json_response({'error': str(ve)}, status=400)
+        except Exception as e:
+            _logger.error(f"Bill creation error: {str(e)}", exc_info=True, stack_info=True)
             return request.make_json_response({'error': str(e)}, status=500)

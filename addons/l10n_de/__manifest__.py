@@ -25,6 +25,7 @@ By default, the audit trail is enabled for GoBD compliance.
     'auto_install': ['account'],
     'data': [
         'data/account_account_tags_data.xml',
+        'data/uom_data.xml',
         'views/account_view.xml',
         'views/res_company_views.xml',
         'wizard/account_secure_entries_wizard.xml',

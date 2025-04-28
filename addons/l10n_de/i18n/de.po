@@ -555,6 +555,11 @@ msgid "Declaration of the advance payment of turnover tax"
 msgstr "Anmeldung der Umsatzsteuer-Vorauszahlung"
 
 #. module: l10n_de
+#: model:uom.category,name:l10n_de.uom_categ_energy
+msgid "Energy"
+msgstr "Energie"
+
+#. module: l10n_de
 #: model:account.report.line,name:l10n_de.tax_report_de_tax_tag_55
 msgid "Deductible input tax amounts"
 msgstr "Abziehbare Vorsteuerbetrage"
@@ -690,6 +695,11 @@ msgstr "Journal"
 #: model:ir.model,name:l10n_de.model_account_move
 msgid "Journal Entry"
 msgstr "Journalbuchung"
+
+#. module: l10n_de
+#: model:uom.uom,name:l10n_de.product_uom_kwh
+msgid "kWh"
+msgstr "kWh"
 
 #. module: l10n_de
 #: model:ir.model.fields,field_description:l10n_de.field_account_tax__l10n_de_datev_code
