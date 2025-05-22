@@ -16,8 +16,8 @@ _logger = logging.getLogger(__name__)
 
 class CustomHome(Home):
     def __init__(self):
-        self.DOODBA_ENV = os.environ.get('DOODBA_ENVIRONMENT')
-        self.BACKEND_URL = os.environ.get('BACKEND_URL')
+        self.ODOO_ENV = os.environ.get('ODOO_ENV')
+        self.BACKEND_URL = f"http://localhost:{os.environ.get('BACKEND_PORT')}"
 
     def _validate_redirect(self, redirect_url):
         """Validate that redirect URL is safe"""
@@ -26,7 +26,7 @@ class CustomHome(Home):
 
         # Allow any redirect in debug mode for development convenience
 
-        if self.DOODBA_ENV == 'devel':
+        if self.ODOO_ENV == 'dev' or self.ODOO_ENV == 'test':
             return True
 
         if not redirect_url:
