@@ -48,7 +48,7 @@ class StrohmAPI(Controller):
             _logger.error("API secret not found in environment variables. Please set ODOO_API_SECRET.")
             raise ValueError("API secret not found in environment variables. Please set ODOO_API_SECRET.")
 
-    def _encrypt_api_key(self):
+    def _encrypt_api_key(self, api_key):
         """Encrypt API key using environment variable secret"""
 
         salt = self._generate_salt()
@@ -62,12 +62,12 @@ class StrohmAPI(Controller):
         api_secret = self.API_SECRET
         key = base64.b64encode(kdf.derive(api_secret.encode()))
         f = Fernet(key)
-        encrypted_key = f.encrypt(api_secret.encode())
+        encrypted_key = f.encrypt(api_key.encode())
 
         # Verify encryption by decrypting and comparing
         try:
             decrypted = f.decrypt(encrypted_key).decode()
-            if decrypted != api_secret:
+            if decrypted != api_key:
                 _logger.error("Encryption verification failed: decrypted key doesn't match original")
                 raise ValueError("Encryption verification failed")
         except Exception as e:
@@ -151,33 +151,6 @@ class StrohmAPI(Controller):
 
         return True
 
-    def _assign_user_group(self, user):
-        """
-        Assign portal group to user and remove internal group
-        Returns: True if successful, False otherwise
-        """
-        try:
-            # Get the groups
-            portal_group = request.env.ref('base.group_portal')
-            internal_group = request.env.ref('base.group_user')
-
-            if not portal_group:
-                _logger.error("Portal group 'base.group_portal' not found")
-                return False
-
-            # Remove the user from internal users group and add to portal users group
-            user.write({
-                'groups_id': [
-                    (3, internal_group.id),  # Remove from internal group
-                    (4, portal_group.id)  # Add to portal group
-                ]
-            })
-
-            _logger.debug(f"User {user.id} ({user.name}) configured as portal user")
-            return True
-        except Exception as e:
-            _logger.error(f"Failed to assign portal group: {str(e)}")
-            return False
 
     def _generate_hash(self, message, secret=None):
         """
@@ -390,6 +363,8 @@ class StrohmAPI(Controller):
                     {k: v for k, v in partner_values.items() if v}
                 )
 
+            portal_group = request.env.ref('base.group_portal')
+
             user_values = {
                 'name': data.get('name'),
                 'login': data.get('email'),
@@ -397,6 +372,7 @@ class StrohmAPI(Controller):
                 'partner_id': partner.id,
                 'lang': 'de_DE',
                 'active': True,
+                'groups_id': [(6, 0, [portal_group.id])],
             }
 
             # Check if user with this login/email already exists
@@ -407,8 +383,6 @@ class StrohmAPI(Controller):
 
             user = request.env['res.users'].sudo().with_context(no_reset_password=True).create(user_values)
 
-            # Assign user groups
-            self._assign_user_group(user)
 
             # Generate and store API key for new user using the new method
             api_key = request.env['res.users.apikeys'].sudo()._generate_for_user(
@@ -426,12 +400,7 @@ class StrohmAPI(Controller):
                 f"{_datetime}{user.id}{partner.id}{encrypted_token_data['key']}{encrypted_token_data['key_salt']}{_salt}",
             )
 
-            # _logger.info("🔑 API key encrypted successfully")
-            # _logger.info(f"🔑 User ID: {user.id}")
-            # _logger.info(f"🔑 Encrypted API key: {encrypted_token_data['key']}")
-            # _logger.info(f"🔑 Encrypted API key salt: {encrypted_token_data['key_salt']}")
-            # _logger.info(f"🔑 Encrypted API key salt: {_salt}")
-            # _logger.info(f"🔑 Encrypted API key hash: {_hash}")
+
             return request.make_json_response({
                 'timestamp': _datetime,
                 'user_id': user.id,
@@ -497,7 +466,7 @@ class StrohmAPI(Controller):
 
             # Proper authentication
             request.session.authenticate(request.env.cr.dbname, credential)
-            _logger.debug('🔑 User authenticated successfully')
+            _logger.debug('🔑 User session authenticated successfully')
 
             # TODO: Do we need to create session everytime we login?
             request.env.user = user

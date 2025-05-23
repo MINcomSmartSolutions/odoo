@@ -20,6 +20,8 @@
         'sale_service',
         'account',
         'payment',
+        'payment_stripe',
+        'base_automation',
     ],
     'data': [
         'views/portal_templates.xml',
@@ -34,6 +36,6 @@
     },
     'application': False,
     'installable': True,
-    'auto_install': False,
+    'auto_install': True,
     'post_init_hook': '_set_parameters_init_hook',
 }

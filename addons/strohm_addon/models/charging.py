@@ -26,7 +26,7 @@ class ChargingSessionInvoice(models.TransientModel):
                 - base_price (float): Standard list price for product (e.g., 0.35).
                 - custom_rate (float): Actual invoice price (e.g., 0.38).
                 - quantity (float): Consumed quantity (e.g., 150, in kWh).
-                // TODO: Add more fields if needed. e.g. tax, bill_date etc.
+                // TODO: Add more fields if needed. e.g. payment terms, bill_date etc.
 
         Returns:
             recordset: The created `account.move` record.
