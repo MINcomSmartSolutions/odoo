@@ -3,8 +3,9 @@
     'name': "Ladeabrechnung Integration",
     'summary': "Integration for Ladeabrechnung",
     'description': """
-        1. Company's Fiscal Localization should be set to Germany for invoicing.
-        2. The module is designed to work with the Odoo Community Edition (CE) version 18.0.
+        1. Company country should be set to Germany for the module to function correctly.
+        2. Company's Fiscal Localization should be set to Germany for invoicing.
+        3. The module is designed to work with the Odoo Community Edition (CE) version 18.0.
     """,
     'version': '18.0.1.0.0',
     'category': 'Services',

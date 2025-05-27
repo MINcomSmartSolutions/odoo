@@ -88,6 +88,65 @@ class ChargingSessionInvoice(models.TransientModel):
 
         return invoice
 
+    @api.model
+    def ensure_standard_products(self, product_definitions):
+        """
+        Ensure all standard products exist in the database.
+
+        Args:
+            product_definitions: List of dicts with product details
+
+        Returns:
+            dict: Dictionary mapping product SKUs to product records
+        """
+        products = {}
+
+        for data in product_definitions:
+            sku = data.get('sku')
+            _logger.info(f"Looking up product with SKU: {sku}")
+
+            product = self.env['product.product'].with_context(active_test=False).search(
+                [('default_code', '=', sku)], limit=1
+            )
+
+            if not product:
+                _logger.info(f"Product with SKU {sku} not found, creating new product")
+                # Create UoM if needed
+                uom_name = data.get('uom_name', 'kWh')
+                uom = self.env['uom.uom'].search([('name', '=', uom_name)], limit=1)
+                if not uom:
+                    _logger.info(f"UOM {uom_name} not found, creating new UOM")
+                    category = self.env.ref('uom.uom_categ_energy', raise_if_not_found=False)
+                    uom = self.env['uom.uom'].create({
+                        'name': uom_name,
+                        'category_id': category.id,
+                        'rounding': 0.01,
+                        'factor_inv': 1.0,
+                    })
+                    self.env.cr.commit()  # Commit UOM creation
+
+                # Create product
+                _logger.info(f"Creating product with SKU: {sku}, name: {data.get('name')}")
+                product = self.env['product.product'].create({
+                    'name': data.get('name') or sku,
+                    'default_code': sku,
+                    'type': 'consu',
+                    'uom_id': uom.id,
+                    'uom_po_id': uom.id,
+                    'list_price': data.get('base_price', 0.3),
+                    'invoice_policy': 'delivery'
+                })
+                self.env.cr.commit()  # Commit product creation
+                _logger.info(f"Created product with ID: {product.id}")
+            elif product.list_price != data.get('base_price', 0.3):
+                _logger.info(f"Updating price for product {sku} from {product.list_price} to {data.get('base_price', 0.3)}")
+                product.list_price = data.get('base_price', 0.3)
+                self.env.cr.commit()  # Commit price update
+
+            products[sku] = product
+
+        return products
+
     def _get_or_create_product(self, data):
         """
         Finds or creates a product.product using:
@@ -97,6 +156,17 @@ class ChargingSessionInvoice(models.TransientModel):
         # Try fetching the product and UoM in parallel using prefetch
 
         sku = data.get('sku')
+
+        # Try to get product from API cache if available
+        api = self.env.context.get('strohm_api')
+        if api and hasattr(api, 'standard_products') and sku in api.standard_products:
+            product = api.standard_products[sku]
+
+            # Update price if needed
+            if product.list_price != data.get('base_price', 0.3):
+                product.list_price = data.get('base_price', 0.3)
+
+            return product
 
         product = self.env['product.product'].with_context(active_test=False).search([('default_code', '=', sku)],
                                                                                      limit=1)
@@ -122,7 +192,7 @@ class ChargingSessionInvoice(models.TransientModel):
                 'type': 'consu',
                 'uom_id': uom.id,
                 'uom_po_id': uom.id,
-                'list_price': data.get('base_price', 0.0),
+                'list_price': data.get('base_price', 0.3),
                 'invoice_policy': 'delivery'
             })
         elif product.list_price != data.get('base_price', 0.0):

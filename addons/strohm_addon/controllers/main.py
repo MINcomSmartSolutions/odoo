@@ -18,6 +18,7 @@ import logging
 import werkzeug.urls
 import werkzeug.utils
 from ..models.res_users_apikeys import CustomAPIKeys
+# import debugpy
 
 _logger = logging.getLogger(__name__)
 
@@ -30,8 +31,20 @@ class StrohmAPI(Controller):
         _logger.info("Initializing StrohmAPI")
         self.datetime_format = "%Y-%m-%dT%H:%M:%S"
 
+        # debugpy.wait_for_client()
+        # debugpy.breakpoint()
+
         if os.environ.get('ODOO_ENV') == 'dev':
             _logger.setLevel(logging.DEBUG)
+
+        # Check current company and its fiscal country
+        company = request.env.company
+        _logger.info(f"Using company: {company.name} (id: {company.id})")
+        if company.country_id.code != 'DE':
+            _logger.warning(
+                f"Company {company.name} does not have Germany set as fiscal country. Current: {company.country_id.name or 'Not set'}")
+        else:
+            _logger.info(f"Company {company.name} has correct fiscal country: {company.country_id.name}")
 
         # Check if de_DE is enabled
         lang = request.env['res.lang'].sudo().search([('code', '=', 'de_DE')], limit=1)
@@ -43,10 +56,38 @@ class StrohmAPI(Controller):
             lang.sudo().write({'active': True})
             _logger.debug("German language (de_DE) activated")
 
+        # Initialize standard products during API startup
+        self._ensure_standard_products()
+
         self.API_SECRET = os.environ.get('ODOO_API_SECRET')
-        if (not self.API_SECRET):
-            _logger.error("API secret not found in environment variables. Please set ODOO_API_SECRET.")
-            raise ValueError("API secret not found in environment variables. Please set ODOO_API_SECRET.")
+        if not self.API_SECRET:
+            _logger.error("API secret not found in environment variables. Please set ODOO_API_SECRET")
+            raise ValueError("API secret not found in environment variables. Please set ODOO_API_SECRET")
+
+
+    def _ensure_standard_products(self):
+        """Pre-create standard products used by the charging system"""
+        try:
+            _logger.info("Ensuring standard charging products exist")
+
+            # Define standard products
+            standard_products = [
+                {
+                    'name': 'Ladesitzung',
+                    'sku': 'standard_charging',
+                    'uom_name': 'kWh',
+                    'base_price': 0.35,
+                },
+                # Add any additional standard products here
+            ]
+
+            # Use the ChargingSessionInvoice model to ensure products exist
+            charging_model = request.env['charging.session.invoice'].sudo()
+            self.standard_products = charging_model.ensure_standard_products(standard_products)
+
+        except Exception as e:
+            _logger.error(f"Failed to initialize standard products: {str(e)}", exc_info=True)
+
 
     def _encrypt_api_key(self, api_key):
         """Encrypt API key using environment variable secret"""
@@ -245,7 +286,7 @@ class StrohmAPI(Controller):
             if not (self._validate_hash(hash, message)):
                 return request.make_json_response({'error': 'Invalid signature'}, status=403)
 
-            has_valid_payment_method = "valid" if (self._check_valid_payment_method(partner_id)) else "invalid"
+            has_valid_payment_method = 1 if (self._check_valid_payment_method(partner_id)) else 0
 
             resp_timestamp = datetime.utcnow().strftime(self.datetime_format)
             _salt = self._generate_salt(decode=True)
@@ -357,14 +398,15 @@ class StrohmAPI(Controller):
             # Check if partner with this email already exists
             existing_partner = request.env['res.partner'].sudo().search([('email', '=', data.get('email'))], limit=1)
             if existing_partner:
-                partner = existing_partner
+                return request.make_json_response(
+                    {'error': f'A partner with email {data.get("email")} already exists'}, status=409
+                )
             else:
                 partner = request.env['res.partner'].sudo().create(
                     {k: v for k, v in partner_values.items() if v}
                 )
 
             portal_group = request.env.ref('base.group_portal')
-
             user_values = {
                 'name': data.get('name'),
                 'login': data.get('email'),
