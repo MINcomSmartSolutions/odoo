@@ -7,9 +7,9 @@ import os
 import time
 
 # Fix imports
-from odoo import http, fields
+from odoo import http, fields, _
 from odoo.http import request, Controller
-from odoo.exceptions import ValidationError
+from odoo.exceptions import ValidationError, UserError
 import secrets
 from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.primitives import hashes
@@ -70,20 +70,9 @@ class StrohmAPI(Controller):
         try:
             _logger.info("Ensuring standard charging products exist")
 
-            # Define standard products
-            standard_products = [
-                {
-                    'name': 'Ladesitzung',
-                    'sku': 'standard_charging',
-                    'uom_name': 'kWh',
-                    'base_price': 0.35,
-                },
-                # Add any additional standard products here
-            ]
-
             # Use the ChargingSessionInvoice model to ensure products exist
             charging_model = request.env['charging.session.invoice'].sudo()
-            self.standard_products = charging_model.ensure_standard_products(standard_products)
+            self.standard_products = charging_model.ensure_standard_products()
 
         except Exception as e:
             _logger.error(f"Failed to initialize standard products: {str(e)}", exc_info=True)

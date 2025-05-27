@@ -32,24 +32,11 @@ class ChargingSessionInvoice(models.TransientModel):
             recordset: The created `account.move` record.
         """
         invoice_datetime_format_to = DEFAULT_SERVER_DATETIME_FORMAT
-        country = self.env.ref('base.de', raise_if_not_found=False) or self.env['res.country'].search(
-            [('code', '=', 'DE')], limit=1)
 
         AccountMove = self.env['account.move']
         Partner = self.env['res.partner'].browse(partner_id)
         if not Partner:
             raise UserError(_("Partner with id %s not found") % partner_id)
-
-        # Use ref when possible instead of search
-        tax = self.env.ref('l10n_de.tax_sale_19', raise_if_not_found=False) or self.env['account.tax'].search([
-            ('amount', '=', 19),
-            ('price_include', '=', True),
-            ('country_id', '=', country.id),
-        ], limit=1)
-
-        if not tax:
-            raise UserError(
-                _("No tax found for Germany with 19% VAT. Make sure the Settings --> Invoice --> Fiscal Localization is set to Germany."))
 
         # format session start and end dates
         _session_start = session_start.strftime(invoice_datetime_format_to)
@@ -57,19 +44,17 @@ class ChargingSessionInvoice(models.TransientModel):
 
         invoice_lines = []
         for data in lines_data:
-            # 1) ensure product exists
+            # Find product (but don't create or modify it)
             product = self._get_or_create_product(data)
 
-            # 2) build the invoice line vals
+            # Build the invoice line vals
             qty = data.get('quantity', 1.0)
-            price_unit = data.get('custom_rate') or product.list_price
-            line_name = data.get('name') or product.name
+            # Use custom_rate if provided, otherwise fall back to product's list_price
+            price_unit = data.get('price_unit', product.list_price)
             invoice_lines.append((0, 0, {
                 'product_id': product.id,
-                'name': line_name,
                 'quantity': qty,
-                'price_unit': price_unit,
-                'tax_ids': [(6, 0, tax.ids)],  # Apply 19% tax
+                'price_unit': price_unit,  # This uses custom price without changing product's base price
             }))
 
         # 3) create the draft customer invoice
@@ -89,17 +74,24 @@ class ChargingSessionInvoice(models.TransientModel):
         return invoice
 
     @api.model
-    def ensure_standard_products(self, product_definitions):
+    def ensure_standard_products(self):
         """
         Ensure all standard products exist in the database.
-
-        Args:
-            product_definitions: List of dicts with product details
 
         Returns:
             dict: Dictionary mapping product SKUs to product records
         """
         products = {}
+
+        # Define standard product here
+        product_definitions = [
+            {
+                'name': 'Ladesitzung',
+                'sku': 'standard_charging',
+                'uom_name': 'kWh',
+                'base_price': 0.35,
+            },
+        ]
 
         for data in product_definitions:
             sku = data.get('sku')
@@ -111,6 +103,7 @@ class ChargingSessionInvoice(models.TransientModel):
 
             if not product:
                 _logger.info(f"Product with SKU {sku} not found, creating new product")
+
                 # Create UoM if needed
                 uom_name = data.get('uom_name', 'kWh')
                 uom = self.env['uom.uom'].search([('name', '=', uom_name)], limit=1)
@@ -127,6 +120,21 @@ class ChargingSessionInvoice(models.TransientModel):
 
                 # Create product
                 _logger.info(f"Creating product with SKU: {sku}, name: {data.get('name')}")
+                country = self.env.ref('base.de', raise_if_not_found=False) or self.env.ref['res.country'].search(
+                    [('code', '=', 'DE')], limit=1)
+
+                # Use ref when possible instead of search
+                tax = self.env.ref('l10n_de.tax_sale_19', raise_if_not_found=False) or self.env.ref[
+                    'account.tax'].search([
+                    ('amount', '=', 19),
+                    ('price_include', '=', True),
+                    ('country_id', '=', country.id),
+                ], limit=1)
+
+                if not tax:
+                    raise UserError(
+                        _("No tax found for Germany with 19% VAT. Make sure the Settings --> Invoice --> Fiscal Localization is set to Germany."))
+
                 product = self.env['product.product'].create({
                     'name': data.get('name') or sku,
                     'default_code': sku,
@@ -134,12 +142,15 @@ class ChargingSessionInvoice(models.TransientModel):
                     'uom_id': uom.id,
                     'uom_po_id': uom.id,
                     'list_price': data.get('base_price', 0.3),
-                    'invoice_policy': 'delivery'
+                    'invoice_policy': data.get('invoice_policy', 'delivery'),
+                    'tax_ids': data.get('tax_ids',[(6, 0, tax.ids)]),
                 })
+
                 self.env.cr.commit()  # Commit product creation
                 _logger.info(f"Created product with ID: {product.id}")
             elif product.list_price != data.get('base_price', 0.3):
-                _logger.info(f"Updating price for product {sku} from {product.list_price} to {data.get('base_price', 0.3)}")
+                _logger.info(
+                    f"Updating price for product {sku} from {product.list_price} to {data.get('base_price', 0.3)}")
                 product.list_price = data.get('base_price', 0.3)
                 self.env.cr.commit()  # Commit price update
 
@@ -147,56 +158,28 @@ class ChargingSessionInvoice(models.TransientModel):
 
         return products
 
+
     def _get_or_create_product(self, data):
         """
-        Finds or creates a product.product using:
-          - default_code = data['sku']
-        and sets up its UoM and list_price = data['base_price'].
+        Finds a product by SKU without modifying its base price.
+        No longer creates products - they must be pre-created during initialization.
         """
-        # Try fetching the product and UoM in parallel using prefetch
-
         sku = data.get('sku')
 
         # Try to get product from API cache if available
         api = self.env.context.get('strohm_api')
         if api and hasattr(api, 'standard_products') and sku in api.standard_products:
-            product = api.standard_products[sku]
+            return api.standard_products[sku]
 
-            # Update price if needed
-            if product.list_price != data.get('base_price', 0.3):
-                product.list_price = data.get('base_price', 0.3)
+        # Fall back to database lookup if not cached
+        product = self.env['product.product'].with_context(active_test=False).search(
+            [('default_code', '=', sku)], limit=1
+        )
 
-            return product
-
-        product = self.env['product.product'].with_context(active_test=False).search([('default_code', '=', sku)],
-                                                                                     limit=1)
-
-        # Only search for UoM if a product needs to be created
         if not product:
-            # FIXME: Might not need to search for UoM, as it should be created with l10n_de
-            uom_name = data.get('uom_name', 'kWh')
-            uom = self.env['uom.uom'].search([('name', '=', uom_name)], limit=1)
-            if not uom:
-                category = self.env.ref('uom.uom_categ_energy', raise_if_not_found=True)
-                uom = self.env['uom.uom'].create({
-                    'name': uom_name,
-                    'category_id': category.id,
-                    'rounding': 0.01,
-                    'factor_inv': 1.0,
-                })
-
-            # Create product with all fields at once
-            product = self.env['product.product'].create({
-                'name': data.get('name') or sku,
-                'default_code': sku,
-                'type': 'consu',
-                'uom_id': uom.id,
-                'uom_po_id': uom.id,
-                'list_price': data.get('base_price', 0.3),
-                'invoice_policy': 'delivery'
-            })
-        elif product.list_price != data.get('base_price', 0.0):
-            product.list_price = data.get('base_price', 0.0)
+            # Instead of creating a product on-the-fly, raise an error
+            raise ValueError(
+                f"Product with SKU '{sku}' not found. Products must be pre-created in system initialization.")
 
         return product
 
