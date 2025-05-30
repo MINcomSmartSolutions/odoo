@@ -1,6 +1,7 @@
 from odoo import models, fields, api, _
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 import logging
+
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 
 _logger = logging.getLogger(__name__)
@@ -11,15 +12,15 @@ class ChargingSessionInvoice(models.TransientModel):
     _description = 'Charging Invoice Related to Ladeabrechnung'
 
     @api.model
-    def generate(self, session_start, session_end, partner_id, lines_data):
+    def generate(self, session_start, session_end, partner, lines_data):
         """
         Generate an invoice for a charging session.
 
         Args:
-            session_start (datetime): Session start datetime in UTC.
-            session_end (datetime): Session end datetime in UTC.
-            partner_id (int): ID of the sale/customer (`res.partner`).
-            lines_data (list[dict]): Invoice line data. List of dicts, each with keys:
+            session_start (Datetime): Session start datetime UTC
+            session_end (Datetime): Session end datetime UTC
+            partner (res.partner): The partner for whom the invoice is created.
+            lines_data (BillLineItem): List of dictionaries containing line item data for the invoice.
                 - name (str): Product name.
                 - sku (str): Internal reference for product.
                 - uom_name (str): Unit of measure name (e.g., "kWh"; only "kWh" accepted for now).
@@ -31,45 +32,42 @@ class ChargingSessionInvoice(models.TransientModel):
         Returns:
             recordset: The created `account.move` record.
         """
-        invoice_datetime_format_to = DEFAULT_SERVER_DATETIME_FORMAT
 
         AccountMove = self.env['account.move']
-        Partner = self.env['res.partner'].browse(partner_id)
-        if not Partner:
-            raise UserError(_("Partner with id %s not found") % partner_id)
-
-        # format session start and end dates
-        _session_start = session_start.strftime(invoice_datetime_format_to)
-        _session_end = session_end.strftime(invoice_datetime_format_to)
+        Partner = self.env['res.partner'].browse(partner.id)
+        if not Partner or not Partner.exists():
+            raise ValidationError('Partner not found for the user. Please ensure the user has a valid partner record.')
 
         invoice_lines = []
         for data in lines_data:
             # Find product (but don't create or modify it)
             product = self._get_or_create_product(data)
 
-            # Build the invoice line vals
-            qty = data.get('quantity', 1.0)
-            # Use custom_rate if provided, otherwise fall back to product's list_price
-            price_unit = data.get('price_unit', product.list_price)
+            # Build the invoice line vals - use direct attribute access instead of .get()
+            qty = data.quantity
+            price_unit = data.price_unit
             invoice_lines.append((0, 0, {
                 'product_id': product.id,
                 'quantity': qty,
-                'price_unit': price_unit,  # This uses custom price without changing product's base price
+                'price_unit': price_unit,
             }))
 
-        # 3) create the draft customer invoice
+        # Create the draft customer invoice
         move_vals = {
             'move_type': 'out_invoice',  # customer invoice
             'invoice_date': fields.Date.today(),
             'partner_id': Partner.id,
             'invoice_line_ids': invoice_lines,
-            'session_start': _session_start,
-            'session_end': _session_end,
+            'session_start': session_start.strftime(DEFAULT_SERVER_DATETIME_FORMAT),
+            'session_end': session_end.strftime(DEFAULT_SERVER_DATETIME_FORMAT),
         }
+
         invoice = AccountMove.create(move_vals)
 
-        # Optional: post immediately
+        # post immediately
         # invoice.action_post()
+
+        #TODO: charge the user with their default payment method???
 
         return invoice
 
@@ -90,6 +88,7 @@ class ChargingSessionInvoice(models.TransientModel):
                 'sku': 'standard_charging',
                 'uom_name': 'kWh',
                 'base_price': 0.35,
+                # list_price is set to base_price by default and can be set changed with price_unit when creating invoice
             },
         ]
 
@@ -119,7 +118,7 @@ class ChargingSessionInvoice(models.TransientModel):
                     self.env.cr.commit()  # Commit UOM creation
 
                 # Create product
-                _logger.info(f"Creating product with SKU: {sku}, name: {data.get('name')}")
+                _logger.info(f"Creating product with SKU: {sku}, name: {data.get('name', sku) }")
                 country = self.env.ref('base.de', raise_if_not_found=False) or self.env.ref['res.country'].search(
                     [('code', '=', 'DE')], limit=1)
 
@@ -142,17 +141,19 @@ class ChargingSessionInvoice(models.TransientModel):
                     'uom_id': uom.id,
                     'uom_po_id': uom.id,
                     'list_price': data.get('base_price', 0.3),
-                    'invoice_policy': data.get('invoice_policy', 'delivery'),
-                    'tax_ids': data.get('tax_ids',[(6, 0, tax.ids)]),
+                    'invoice_policy': 'delivery',
+                    # In Odoo, the tuple `(6, 0, ids)` is a special command used in many2many and one2many fields to set the field's value. Here:
+                    #
+                    # - `6` is the command to replace all existing records with the provided list.
+                    # - `0` is ignored (kept for compatibility).
+                    # - `tax.ids` is the list of IDs to set.
+                    #
+                    # So, `[(6, 0, tax.ids)]` means: replace all current tax records with the ones in `tax.ids`.
+                    'tax_ids': [(6, 0, tax.ids)],
                 })
 
                 self.env.cr.commit()  # Commit product creation
                 _logger.info(f"Created product with ID: {product.id}")
-            elif product.list_price != data.get('base_price', 0.3):
-                _logger.info(
-                    f"Updating price for product {sku} from {product.list_price} to {data.get('base_price', 0.3)}")
-                product.list_price = data.get('base_price', 0.3)
-                self.env.cr.commit()  # Commit price update
 
             products[sku] = product
 
@@ -162,9 +163,9 @@ class ChargingSessionInvoice(models.TransientModel):
     def _get_or_create_product(self, data):
         """
         Finds a product by SKU without modifying its base price.
-        No longer creates products - they must be pre-created during initialization.
         """
-        sku = data.get('sku')
+        # Use direct attribute access instead of .get()
+        sku = data.sku
 
         # Try to get product from API cache if available
         api = self.env.context.get('strohm_api')

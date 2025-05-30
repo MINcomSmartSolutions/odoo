@@ -1,29 +1,32 @@
 import base64
-from datetime import datetime
 import hashlib
 import hmac
 import json
+import logging
 import os
-import time
-
-# Fix imports
-from odoo import http, fields, _
-from odoo.http import request, Controller
-from odoo.exceptions import ValidationError, UserError
 import secrets
+import time
+from datetime import datetime
+
+import werkzeug.urls
+import werkzeug.utils
 from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-import logging
-import werkzeug.urls
-import werkzeug.utils
-from ..models.res_users_apikeys import CustomAPIKeys
+from pydantic import ValidationError as PydanticValidationError
+
+from odoo import http, fields
+from odoo.exceptions import ValidationError
+from odoo.http import request, Controller
+from ..schemas.validation import (
+    UserCreate, ApiKeyRotation, PaymentMethodCheck,
+    BillCreate, PortalLogin
+)
+
 # import debugpy
 
 _logger = logging.getLogger(__name__)
 
-
-# TODO: Input validation and sanitization
 
 class StrohmAPI(Controller):
     def __init__(self):
@@ -64,7 +67,6 @@ class StrohmAPI(Controller):
             _logger.error("API secret not found in environment variables. Please set ODOO_API_SECRET")
             raise ValueError("API secret not found in environment variables. Please set ODOO_API_SECRET")
 
-
     def _ensure_standard_products(self):
         """Pre-create standard products used by the charging system"""
         try:
@@ -76,7 +78,6 @@ class StrohmAPI(Controller):
 
         except Exception as e:
             _logger.error(f"Failed to initialize standard products: {str(e)}", exc_info=True)
-
 
     def _encrypt_api_key(self, api_key):
         """Encrypt API key using environment variable secret"""
@@ -168,20 +169,6 @@ class StrohmAPI(Controller):
         request.update_env(user=admin)
         return True
 
-    def _validate_required_fields(self, data):
-        """Validate required fields for user creation"""
-        required_fields = ['name', 'email']
-        missing_fields = [field for field in required_fields if not data.get(field)]
-        if missing_fields:
-            raise ValidationError(f"Missing required fields: {', '.join(missing_fields)}")
-
-        # Validate email format
-        if data.get('email') and '@' not in data.get('email'):
-            raise ValidationError("Invalid email format")
-
-        return True
-
-
     def _generate_hash(self, message, secret=None):
         """
         Generate HMAC signature for authentication validation.
@@ -247,32 +234,31 @@ class StrohmAPI(Controller):
     @http.route('/internal/user/valid_pm', type='http', auth='public', methods=['POST'], csrf=False)
     def check_payment_method(self, **kw):
         try:
-            data = json.loads(request.httprequest.data)
+            # Parse and validate request data with Pydantic
+            try:
+                data = json.loads(request.httprequest.data)
+                validated_data = PaymentMethodCheck(**data)
+            except PydanticValidationError as e:
+                errors = e.errors()
+                error_msgs = [f"{err['loc'][0]}: {err['msg']}" for err in errors]
+                return request.make_json_response({'error': error_msgs}, status=400)
+            except json.JSONDecodeError:
+                return request.make_json_response({'error': 'Invalid JSON'}, status=400)
 
-            timestamp = data.get('timestamp')
-            req_user_id = data.get('user_id')
-            req_partner_id = data.get('partner_id')
-            encrypted_key = data.get('key')
-            key_salt = data.get('key_salt')
-            salt = data.get('salt')
-            hash = data.get('hash')
-
-            if not req_user_id or not encrypted_key or not key_salt or not timestamp or not hash or not salt:
-                raise ValidationError("Missing required parameters")
-
-            decrypted_key = self._decrypt_api_key(encrypted_key, key_salt)
+            # Continue with validation using the validated data
+            decrypted_key = self._decrypt_api_key(validated_data.key, validated_data.key_salt)
 
             # Continue with the existing validation logic
             user_id = request.env['res.users.apikeys'].sudo()._check_credentials(scope='rpc', key=decrypted_key)
-            if not user_id == int(req_user_id):
+            if not user_id == int(validated_data.user_id):
                 raise ValidationError("Invalid API key")
 
-            partner_id = request.env['res.users'].sudo().browse(req_user_id).partner_id.id
-            if not partner_id or not partner_id == int(req_partner_id):
+            partner_id = request.env['res.users'].sudo().browse(validated_data.user_id).partner_id.id
+            if not partner_id or not partner_id == int(validated_data.partner_id):
                 raise ValidationError("Invalid partner ID")
 
-            message = f"{timestamp}{req_user_id}{req_partner_id}{encrypted_key}{key_salt}{salt}"
-            if not (self._validate_hash(hash, message)):
+            message = f"{validated_data.timestamp}{validated_data.user_id}{validated_data.partner_id}{validated_data.key}{validated_data.key_salt}{validated_data.salt}"
+            if not (self._validate_hash(validated_data.hash, message)):
                 return request.make_json_response({'error': 'Invalid signature'}, status=403)
 
             has_valid_payment_method = 1 if (self._check_valid_payment_method(partner_id)) else 0
@@ -300,31 +286,31 @@ class StrohmAPI(Controller):
             if not self._validate_admin_token(request.httprequest.headers):
                 return request.make_json_response({'error': 'Invalid admin token'}, status=401)
 
-            data = json.loads(request.httprequest.data)
+            # Parse and validate request data with Pydantic
+            try:
+                data = json.loads(request.httprequest.data)
+                validated_data = ApiKeyRotation(**data)
+            except PydanticValidationError as e:
+                errors = e.errors()
+                error_msgs = [f"{err['loc'][0]}: {err['msg']}" for err in errors]
+                return request.make_json_response({'error': error_msgs}, status=400)
+            except json.JSONDecodeError:
+                return request.make_json_response({'error': 'Invalid JSON'}, status=400)
 
-            timestamp = data.get('timestamp')
-            req_user_id = data.get('user_id')
-            encrypted_key = data.get('key')
-            key_salt = data.get('key_salt')
-            salt = data.get('salt')
-            hash = data.get('hash')
-
-            if not req_user_id or not encrypted_key or not key_salt or not timestamp or not hash or not salt:
-                raise ValidationError("Missing required parameters")
-
-            decrypted_key = self._decrypt_api_key(encrypted_key, key_salt)
+            # Decrypt the API key
+            decrypted_key = self._decrypt_api_key(validated_data.key, validated_data.key_salt)
 
             # Continue with the existing validation logic
             user_id = request.env['res.users.apikeys'].sudo()._check_credentials(scope='rpc', key=decrypted_key)
-            if not user_id == int(req_user_id):
+            if not user_id == validated_data.user_id:
                 raise ValidationError("Invalid API key")
 
-            message = f"{timestamp}{req_user_id}{encrypted_key}{key_salt}{salt}"
-            if not (self._validate_hash(hash, message)):
+            message = f"{validated_data.timestamp}{validated_data.user_id}{validated_data.key}{validated_data.key_salt}{validated_data.salt}"
+            if not (self._validate_hash(validated_data.hash, message)):
                 return request.make_json_response({'error': 'Invalid signature'}, status=403)
 
             # Set the api keys expiration date to right now to invalidate it
-            request.env['res.users.apikeys'].sudo().search([('user_id', '=', req_user_id)]).write(
+            request.env['res.users.apikeys'].sudo().search([('user_id', '=', validated_data.user_id)]).write(
                 {'expiration_date': fields.Datetime.now()})
 
             # Generate new API key
@@ -368,32 +354,36 @@ class StrohmAPI(Controller):
             if not self._validate_admin_token(request.httprequest.headers):
                 return request.make_json_response({'error': 'Invalid admin token'}, status=401)
 
-            data = json.loads(request.httprequest.data)
+            # Parse and validate request data with Pydantic
+            try:
+                data = json.loads(request.httprequest.data)
+                validated_data = UserCreate(**data)
+            except PydanticValidationError as e:
+                errors = e.errors()
+                error_msgs = [f"{err['loc'][0]}: {err['msg']}" for err in errors]
+                return request.make_json_response({'error': error_msgs}, status=400)
+            except json.JSONDecodeError:
+                return request.make_json_response({'error': 'Invalid JSON'}, status=400)
 
-            # Validate required fields
-            self._validate_required_fields(data)
+            # Check if partner with this email already exists
+            existing_partner = request.env['res.partner'].sudo().search([('email', '=', validated_data.email)], limit=1)
+            if existing_partner:
+                return request.make_json_response(
+                    {'error': f'A partner with email {validated_data.email} already exists'}, status=409
+                )
 
-            # Create user and partner
+            # Create partner
             germany = request.env['res.country'].sudo().search([('code', '=', 'DE')], limit=1)
-
             partner_values = {
-                'name': data.get('name'),
-                'email': data.get('email'),
+                'name': validated_data.name,
+                'email': validated_data.email,
                 'country_id': germany.id,
                 'lang': 'de_DE',
                 'tz': 'Europe/Berlin',
             }
-
-            # Check if partner with this email already exists
-            existing_partner = request.env['res.partner'].sudo().search([('email', '=', data.get('email'))], limit=1)
-            if existing_partner:
-                return request.make_json_response(
-                    {'error': f'A partner with email {data.get("email")} already exists'}, status=409
-                )
-            else:
-                partner = request.env['res.partner'].sudo().create(
-                    {k: v for k, v in partner_values.items() if v}
-                )
+            partner = request.env['res.partner'].sudo().create(
+                {k: v for k, v in partner_values.items() if v}
+            )
 
             portal_group = request.env.ref('base.group_portal')
             user_values = {
@@ -414,7 +404,6 @@ class StrohmAPI(Controller):
 
             user = request.env['res.users'].sudo().with_context(no_reset_password=True).create(user_values)
 
-
             # Generate and store API key for new user using the new method
             api_key = request.env['res.users.apikeys'].sudo()._generate_for_user(
                 user.id,
@@ -430,7 +419,6 @@ class StrohmAPI(Controller):
             _hash = self._generate_hash(
                 f"{_datetime}{user.id}{partner.id}{encrypted_token_data['key']}{encrypted_token_data['key_salt']}{_salt}",
             )
-
 
             return request.make_json_response({
                 'timestamp': _datetime,
@@ -452,36 +440,31 @@ class StrohmAPI(Controller):
     @http.route('/portal_login', type='http', auth='public', methods=['GET'], csrf=False)
     def portal_auto_login(self, **kw):
         try:
-            timestamp = str(kw.get('timestamp'))
-            encrypted_api_key = str(kw.get('key'))
-            # TODO: Add user_id and partner_id to the request for more specific validation
-            key_salt = kw.get('key_salt')
-            salt = str(kw.get('salt'))
-            hash = str(kw.get('hash'))
-
-            if not encrypted_api_key or not key_salt or not timestamp or not hash:
-                return request.make_json_response({'error': 'Missing parameters'}, status=401)
+            # Validate query parameters using Pydantic
+            try:
+                validated_data = PortalLogin(**kw)
+            except PydanticValidationError as e:
+                errors = e.errors()
+                error_msgs = [f"{err['loc'][0]}: {err['msg']}" for err in errors]
+                return request.make_json_response({'error': error_msgs}, status=400)
 
             # Verify timestamp isn't too old (5-minute window)
-            # Parse ISO timestamp to Unix time
-            timestamp_dt = datetime.strptime(timestamp, self.datetime_format)
-            timestamp_unix = int(timestamp_dt.timestamp())
+            timestamp_unix = int(validated_data.parsed_timestamp().timestamp())
             if int(time.time()) - timestamp_unix > 300:
                 return request.make_json_response({'error': 'Link expired'}, status=403)
 
-            decrypted_key = self._decrypt_api_key(encrypted_api_key, key_salt)
-
-            _logger.debug('🔑 User"s API key decrypted successfully')
+            # Decrypt API key
+            decrypted_key = self._decrypt_api_key(validated_data.key, validated_data.key_salt)
+            _logger.debug('🔑 User API key decrypted successfully')
 
             # Continue with the existing validation logic
             user_id = request.env['res.users.apikeys'].sudo()._check_credentials(scope='rpc', key=decrypted_key)
-
             if not user_id:
                 raise ValidationError("Invalid API key")
 
             # Create the message that was used for the signature
-            message = f"{timestamp}{user_id}{encrypted_api_key}{key_salt}{salt}"
-            if not (self._validate_hash(hash, message)):
+            message = f"{validated_data.timestamp}{user_id}{validated_data.key}{validated_data.key_salt}{validated_data.salt}"
+            if not (self._validate_hash(validated_data.hash, message)):
                 return request.make_json_response({'error': 'Invalid signature'}, status=403)
 
             _logger.debug(f"🔑 User ID: {user_id}")
@@ -491,15 +474,13 @@ class StrohmAPI(Controller):
                 return request.make_json_response({'error': 'User not found'}, status=404)
 
             request.httprequest.environ['wsgi.interactive'] = False
-
             # Changed 'token' to 'password' to match Odoo's expectation
             credential = {'login': user.login, 'password': decrypted_key, 'type': 'webauthn'}
-
-            # Proper authentication
             request.session.authenticate(request.env.cr.dbname, credential)
             _logger.debug('🔑 User session authenticated successfully')
 
             # TODO: Do we need to create session everytime we login?
+            # TODO: odoo.addons.base.models.res_device
             request.env.user = user
             request.session.session_token = user._compute_session_token(request.session.sid)
             request.session.uid = user.id
@@ -521,59 +502,55 @@ class StrohmAPI(Controller):
     @http.route('/internal/bill/create', type='http', auth='public', methods=['POST'], csrf=False)
     def create_bill(self, **kw):
         try:
-
-            raw_data = request.httprequest.data
-            if not raw_data:
-                raise ValidationError("No data provided in request body")
+            # Parse and validate request data with Pydantic
             try:
-                data = json.loads(raw_data)
-            except json.JSONDecodeError as e:
-                raise ValidationError(f"Invalid JSON: {str(e)}")
+                data = json.loads(request.httprequest.data)
+                validated_data = BillCreate(**data)
+            except PydanticValidationError as e:
+                errors = e.errors()
+                error_msgs = [f"{err['loc'][0]}: {err['msg']}" for err in errors]
+                return request.make_json_response({'error': error_msgs}, status=400)
+            except json.JSONDecodeError:
+                return request.make_json_response({'error': 'Invalid JSON'}, status=400)
 
-            lines_data = data.get('lines_data')
-            timestamp = str(data.get('timestamp'))
-            encrypted_api_key = str(data.get('key'))
-            key_salt = str(data.get('key_salt'))
-            req_session_start = data.get('session_start')
-            req_session_end = data.get('session_end')
+            # Create the message that was used for the signature
+            message = f"{validated_data.timestamp}{validated_data.user_id}{validated_data.partner_id}{validated_data.session_start}{validated_data.session_end}{validated_data.key}{validated_data.key_salt}{validated_data.salt}"
+            if not self._validate_hash(validated_data.hash, message):
+                return request.make_json_response({'error': 'Invalid signature'}, status=403)
 
-            # Validate required fields
-            session_start = datetime.strptime(req_session_start, self.datetime_format)
-            session_end = datetime.strptime(req_session_end, self.datetime_format)
-
-            # salt = str(data.get('salt'))
-            # hash = str(data.get('hash'))
-
-            # if not lines_data or not encrypted_api_key or not key_salt or not timestamp or not hash or not salt:
-            #     raise ValidationError("Missing required parameters")
+            # Parse timestamps to datetime objects
+            session_start = datetime.strptime(validated_data.session_start, self.datetime_format)
+            session_end = datetime.strptime(validated_data.session_end, self.datetime_format)
+            timestamp_dt = datetime.strptime(validated_data.timestamp, self.datetime_format)
 
             # Verify timestamp isn't too old (5-minute window)
-            # Parse ISO timestamp to Unix time
-            timestamp_dt = datetime.strptime(timestamp, self.datetime_format)
             timestamp_unix = int(timestamp_dt.timestamp())
             if int(time.time()) - timestamp_unix > 300:
-                return request.make_json_response({'error': 'Link expired'}, status=403)
+                return request.make_json_response({'error': 'Expired'}, status=403)
 
-            decrypted_key = self._decrypt_api_key(encrypted_api_key, key_salt)
+            # Decrypt API key and authenticate user
+            decrypted_key = self._decrypt_api_key(validated_data.key, validated_data.key_salt)
             _logger.debug('🔑 API key decrypted successfully')
 
             # Continue with the existing validation logic
             user_id = request.env['res.users.apikeys'].sudo()._check_credentials(scope='rpc', key=decrypted_key)
-            partner_id = request.env['res.users'].sudo().browse(user_id).partner_id.id
-
-            if not user_id or not partner_id:
+            if not user_id:
                 raise ValidationError("Invalid API key")
 
-            # Create the message that was used for the signature
-            # message = f"{timestamp}{user_id}{partner_id}{encrypted_api_key}{key_salt}"
-            # if not self._validate_hash(hash, message):
-            #     return request.make_json_response({'error': 'Invalid signature'}, status=403)
-
-            _logger.debug(f"🔑 User ID: {user_id}")
-
+            # Validate user and partner
             user = request.env['res.users'].sudo().browse(user_id)
-            if not user.exists():
-                return request.make_json_response({'error': 'User not found'}, status=404)
+            partner_id = user.partner_id.id if user.exists() else None
+            Partner = request.env['res.partner'].sudo().browse(partner_id)
+            if not Partner:
+                _logger.warning('No partner found for user ID %s', user_id)
+                raise ValidationError("Invalid API key")
+
+            # Ensure partner_id and user_id match the request
+            if partner_id != validated_data.partner_id or user_id != validated_data.user_id:
+                _logger.warning('User ID or Partner ID mismatch in bill creation request')
+                raise ValidationError("Invalid API key")
+
+            _logger.debug(f"User ID: {user_id}")
 
             request.httprequest.environ['wsgi.interactive'] = False
 
@@ -585,8 +562,10 @@ class StrohmAPI(Controller):
             _logger.debug('🔑 User authenticated successfully')
 
             # Generate the bill using the model method
-            bill = request.env['charging.session.invoice'].sudo().generate(session_start, session_end, partner_id,
-                                                                           lines_data)
+            bill = request.env['charging.session.invoice'].sudo().generate(session_start,
+                                                                           session_end,
+                                                                           Partner,
+                                                                           validated_data.lines_data)
 
             return request.make_json_response({
                 'success': True,
@@ -594,8 +573,8 @@ class StrohmAPI(Controller):
                 'message': "Bill created successfully"
             }, status=201)
 
-        except ValidationError as ve:
-            return request.make_json_response({'error': str(ve)}, status=400)
-        except Exception as e:
-            _logger.error(f"Bill creation error: {str(e)}", exc_info=True, stack_info=True)
-            return request.make_json_response({'error': str(e)}, status=500)
+        except ValidationError as verror:
+            return request.make_json_response({'error': str(verror)}, status=400)
+        except Exception as error:
+            _logger.error(f"Bill creation error: {str(error)}", exc_info=True, stack_info=True)
+            return request.make_json_response({'error': str(error)}, status=500)
