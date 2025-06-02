@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <record id="automation_user_change" model="base.automation">
+            <field name="name">User Changed Sync to Backend</field>
+            <field name="model_id" ref="base.model_res_users"/>
+            <field name="trigger">on_write</field>
+            <field name="active" eval="True"/>
+            <field name="filter_pre_domain" eval="[('groups_id', '=', ref('base.group_portal'))]"/>
+            <field name="trigger_field_ids" eval="[(4, ref('base.field_res_users__login')),
+                                                 (4, ref('base.field_res_users__name')),
+                                                 (4, ref('base.field_res_users__email')),
+                                                 (4, ref('base.field_res_users__partner_id'))]"/>
+        </record>
+
+        <record id="server_action_user_change" model="ir.actions.server">
+            <field name="name">User Changed Sync to Backend - Action</field>
+            <field name="model_id" ref="base.model_res_users"/>
+            <field name="binding_model_id" ref="base.model_res_users"/>
+            <field name="state">code</field>
+            <field name="code">env['strohm_addon.user_sync'].sync_user_changes(record.ids, env.context.get('old_values'))</field>
+            <field name="usage">base_automation</field>
+            <field name="base_automation_id" ref="automation_user_change"/>
+        </record>
+
+        <record id="automation_user_delete" model="base.automation">
+            <field name="name">User Deleted Sync to Backend</field>
+            <field name="model_id" ref="base.model_res_users"/>
+            <field name="trigger">on_unlink</field>
+            <field name="active" eval="True"/>
+            <field name="filter_domain" eval="[('groups_id', '=', ref('base.group_portal'))]"/>
+        </record>
+
+        <record id="server_action_user_delete" model="ir.actions.server">
+            <field name="name">User Deleted Sync to Backend - Action</field>
+            <field name="model_id" ref="base.model_res_users"/>
+            <field name="binding_model_id" ref="base.model_res_users"/>
+            <field name="state">code</field>
+            <field name="code">env['strohm_addon.user_sync'].sync_user_deletion({'id': record.id, 'login': record.login, 'name': record.name})</field>
+            <field name="usage">base_automation</field>
+            <field name="base_automation_id" ref="automation_user_delete"/>
+        </record>
+
+        <!-- Partner automations -->
+        <record id="automation_partner_change" model="base.automation">
+            <field name="name">Partner (Portal) Changed Sync to Backend</field>
+            <field name="model_id" ref="base.model_res_partner"/>
+            <field name="trigger">on_write</field>
+            <field name="active" eval="True"/>
+            <field name="filter_pre_domain" eval="[('user_ids.groups_id', '=', ref('base.group_portal'))]"/>
+            <field name="trigger_field_ids" eval="[(4, ref('base.field_res_partner__name')),
+                                                 (4, ref('base.field_res_partner__email')),
+                                                 (4, ref('base.field_res_partner__phone')),
+                                                 (4, ref('base.field_res_partner__mobile')),
+                                                 (4, ref('base.field_res_partner__street')),
+                                                 (4, ref('base.field_res_partner__street2')),
+                                                 (4, ref('base.field_res_partner__city')),
+                                                 (4, ref('base.field_res_partner__zip')),
+                                                 (4, ref('base.field_res_partner__vat')),
+                                                 (4, ref('base.field_res_partner__country_id')),
+                                                 (4, ref('base.field_res_partner__active'))]"/>
+        </record>
+
+        <record id="server_action_partner_change" model="ir.actions.server">
+            <field name="name">Partner (Portal) Changed Sync to Backend - Action</field>
+            <field name="model_id" ref="base.model_res_partner"/>
+            <field name="binding_model_id" ref="base.model_res_partner"/>
+            <field name="state">code</field>
+            <field name="code">env['strohm_addon.partner_sync'].sync_partner_changes(record.ids, env.context.get('old_values'))</field>
+            <field name="usage">base_automation</field>
+            <field name="base_automation_id" ref="automation_partner_change"/>
+        </record>
+
+        <record id="automation_partner_create" model="base.automation">
+            <field name="name">Partner (Portal) Created Sync to Backend</field>
+            <field name="model_id" ref="base.model_res_partner"/>
+            <field name="trigger">on_create</field>
+            <field name="active" eval="True"/>
+            <field name="filter_domain" eval="[('user_ids.groups_id', '=', ref('base.group_portal'))]"/>
+        </record>
+
+        <record id="server_action_partner_create" model="ir.actions.server">
+            <field name="name">Partner (Portal) Created Sync to Backend - Action</field>
+            <field name="model_id" ref="base.model_res_partner"/>
+            <field name="binding_model_id" ref="base.model_res_partner"/>
+            <field name="state">code</field>
+            <field name="code">env['strohm_addon.partner_sync'].sync_partner_changes(record.ids)</field>
+            <field name="usage">base_automation</field>
+            <field name="base_automation_id" ref="automation_partner_create"/>
+        </record>
+
+        <record id="automation_partner_unlink" model="base.automation">
+            <field name="name">Partner (Portal) Deleted Sync to Backend</field>
+            <field name="model_id" ref="base.model_res_partner"/>
+            <field name="trigger">on_unlink</field>
+            <field name="active" eval="True"/>
+            <field name="filter_domain" eval="[('user_ids.groups_id', '=', ref('base.group_portal'))]"/>
+        </record>
+
+        <record id="server_action_partner_unlink" model="ir.actions.server">
+            <field name="name">Partner (Portal) Deleted Sync to Backend - Action</field>
+            <field name="model_id" ref="base.model_res_partner"/>
+            <field name="binding_model_id" ref="base.model_res_partner"/>
+            <field name="state">code</field>
+            <field name="code">
+has_portal_user = any(user.has_group('base.group_portal') for user in record.user_ids) if record.user_ids else False
+if has_portal_user:
+    partner_data = {
+        'id': record.id,
+        'name': record.name,
+        'email': record.email,
+        'has_portal_user': has_portal_user
+    }
+    env['strohm_addon.partner_sync'].sync_partner_deletion(partner_data)
+            </field>
+            <field name="usage">base_automation</field>
+            <field name="base_automation_id" ref="automation_partner_unlink"/>
+        </record>
+    </data>
+</odoo>

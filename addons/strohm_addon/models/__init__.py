@@ -1,3 +1,4 @@
 from . import res_users_apikeys
-from . import res_partner
 from . import charging
+from . import user_sync
+from . import partner_sync

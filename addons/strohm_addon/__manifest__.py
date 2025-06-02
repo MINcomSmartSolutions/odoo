@@ -28,11 +28,14 @@
         'views/portal_templates.xml',
         'views/charging_session_invoice.xml',
         'security/ir.model.access.csv',
+        'data/user_automations.xml',
     ],
     'external_dependencies': {
         'python': [
             'cryptography',
             'python-dotenv',
+            'pydantic',
+            'email-validator'
         ],
     },
     'application': False,
