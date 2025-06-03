@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--@formatter:off-->
 <odoo>
     <data noupdate="0">
         <record id="automation_user_change" model="base.automation">
@@ -102,7 +103,7 @@
             <field name="model_id" ref="base.model_res_partner"/>
             <field name="binding_model_id" ref="base.model_res_partner"/>
             <field name="state">code</field>
-            <field name="code">
+            <field name="code"><![CDATA[
 has_portal_user = any(user.has_group('base.group_portal') for user in record.user_ids) if record.user_ids else False
 if has_portal_user:
     partner_data = {
@@ -112,9 +113,46 @@ if has_portal_user:
         'has_portal_user': has_portal_user
     }
     env['strohm_addon.partner_sync'].sync_partner_deletion(partner_data)
-            </field>
+            ]]></field>
             <field name="usage">base_automation</field>
             <field name="base_automation_id" ref="automation_partner_unlink"/>
+        </record>
+
+        <!-- Payment automations
+        FIXME: Does not triggered when user faces payment fail when tries to pay themselves.
+            Only triggered in admin interface for the payment fail.-->
+        <record id="automation_payment_rejection" model="base.automation">
+            <field name="name">Payment Rejection Sync to Backend</field>
+            <field name="model_id" ref="payment.model_payment_transaction"/>
+            <field name="trigger">on_write</field>
+            <field name="active" eval="True"/>
+            <field name="trigger_field_ids" eval="[(4, ref('payment.field_payment_transaction__state'))]"/>
+            <field name="filter_domain" eval="[('state', 'in', ['error', 'cancel'])]"/>
+        </record>
+
+        <record id="server_action_payment_rejection" model="ir.actions.server">
+            <field name="name">Payment Rejection Sync to Backend - Action</field>
+            <field name="model_id" ref="payment.model_payment_transaction"/>
+            <field name="binding_model_id" ref="payment.model_payment_transaction"/>
+            <field name="state">code</field>
+            <field name="code"><![CDATA[
+if record.state in ['error', 'cancel']:
+    payment_data = {
+        'id': record.id,
+        'reference': record.reference,
+        'provider_reference': record.provider_reference,
+        'state': record.state,
+        'state_message': record.state_message,
+        'partner_id': record.partner_id.id,
+        'partner_name': record.partner_name,
+        'amount': record.amount,
+        'currency_id': record.currency_id.id,
+        'currency_name': record.currency_id.name
+    }
+    env['strohm_addon.payment_transaction_sync'].sync_payment_rejection(payment_data)
+            ]]></field>
+            <field name="usage">base_automation</field>
+            <field name="base_automation_id" ref="automation_payment_rejection"/>
         </record>
     </data>
 </odoo>

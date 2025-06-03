@@ -12,6 +12,7 @@ _logger = logging.getLogger(__name__)
 
 class CustomAPIKeys(models.Model):
     _inherit = 'res.users.apikeys'
+    _description = 'Custom API Keys for Users'
 
     @api.model
     def _generate_for_user(self, user_id, scope, name, expiration_date=None):
