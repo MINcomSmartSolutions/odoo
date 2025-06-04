@@ -13,12 +13,9 @@
     'website': 'https://min2sol.com',
     'depends': [
         'base',
-        'web',
         'l10n_de',
         'portal',
         'account',
-        'sales_team',
-        'sale_service',
         'account',
         'payment',
         'payment_stripe',
@@ -29,6 +26,7 @@
         'views/charging_session_invoice.xml',
         'security/ir.model.access.csv',
         'data/user_automations.xml',
+        'data/partner_user_integrity_cron.xml'
     ],
     'external_dependencies': {
         'python': [

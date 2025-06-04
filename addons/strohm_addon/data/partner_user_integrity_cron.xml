@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="ir_cron_partner_user_integrity_check" model="ir.cron">
+        <field name="name">Partner-User Integrity: Check relationship integrity</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="nextcall" eval="(DateTime.now().replace(hour=3, minute=30) + timedelta(days=1)).strftime('%Y-%m-%d %H:%M:%S')" />
+        <field name="model_id" ref="model_strohm_addon_partner_user_integrity"/>
+        <field name="code">model._check_partner_user_integrity()</field>
+        <field name="state">code</field>
+        <field name="user_id" ref="base.user_root"/>
+        <field name="active">True</field>
+    </record>
+</odoo>
