@@ -4,17 +4,17 @@
 # 
 # Translators:
 # Martin Trigaux, 2024
-# Malaz Abuidris <msea@odoo.com>, 2024
 # Mustafa J. Kadhem <safi2266@gmail.com>, 2024
 # Wil Odoo, 2025
+# Malaz Abuidris <msea@odoo.com>, 2025
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-10 13:22+0000\n"
+"POT-Creation-Date: 2025-05-23 18:38+0000\n"
 "PO-Revision-Date: 2024-09-25 09:42+0000\n"
-"Last-Translator: Wil Odoo, 2025\n"
+"Last-Translator: Malaz Abuidris <msea@odoo.com>, 2025\n"
 "Language-Team: Arabic (https://app.transifex.com/odoo/teams/41243/ar/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -2525,7 +2525,7 @@ msgstr ""
 #. odoo-javascript
 #: code:addons/website/static/src/components/website_loader/website_loader.xml:0
 msgid "Adapting Building Blocks."
-msgstr ""
+msgstr "تكييف الكتل البرمجية الإنشائية. "
 
 #. module: website
 #. odoo-javascript
@@ -2694,7 +2694,7 @@ msgstr "إضافة لغات "
 #. odoo-javascript
 #: code:addons/website/static/src/snippets/s_website_form/options.js:0
 msgid "Add option"
-msgstr ""
+msgstr "إضافة خيار "
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.view_edit_third_party_domains
@@ -3957,7 +3957,7 @@ msgstr "شبكة البطاقات "
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.snippets
 msgid "Cards Soft"
-msgstr ""
+msgstr "بطاقات رقمية "
 
 #. module: website
 #: model:website.configurator.feature,name:website.feature_module_career
@@ -4113,7 +4113,7 @@ msgstr "صندوق الاختيار "
 #. odoo-javascript
 #: code:addons/website/static/src/snippets/s_website_form/options.js:0
 msgid "Checkbox List"
-msgstr ""
+msgstr "قائمة صناديق الاختيار "
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_company_team
@@ -5029,7 +5029,7 @@ msgstr "النسبة المخصصة "
 #. odoo-javascript
 #: code:addons/website/static/src/snippets/s_website_form/options.js:0
 msgid "Custom Text"
-msgstr ""
+msgstr "نص مخصص "
 
 #. module: website
 #. odoo-javascript
@@ -7586,7 +7586,6 @@ msgstr "العنوان 1"
 #. module: website
 #. odoo-javascript
 #: code:addons/website/static/src/js/editor/snippets.editor.js:0
-#: code:addons/website/static/src/xml/website.editor.xml:0
 msgid "Headings"
 msgstr "الترويسات "
 
@@ -7596,36 +7595,26 @@ msgid "Headings 1"
 msgstr "العنوان 1"
 
 #. module: website
-#. odoo-javascript
-#: code:addons/website/static/src/xml/website.editor.xml:0
 #: model_terms:ir.ui.view,arch_db:website.bs_debug_view
 msgid "Headings 2"
 msgstr "العنوان 2"
 
 #. module: website
-#. odoo-javascript
-#: code:addons/website/static/src/xml/website.editor.xml:0
 #: model_terms:ir.ui.view,arch_db:website.bs_debug_view
 msgid "Headings 3"
 msgstr "العنوان 3"
 
 #. module: website
-#. odoo-javascript
-#: code:addons/website/static/src/xml/website.editor.xml:0
 #: model_terms:ir.ui.view,arch_db:website.bs_debug_view
 msgid "Headings 4"
 msgstr "العنوان 4"
 
 #. module: website
-#. odoo-javascript
-#: code:addons/website/static/src/xml/website.editor.xml:0
 #: model_terms:ir.ui.view,arch_db:website.bs_debug_view
 msgid "Headings 5"
 msgstr "العنوان 5"
 
 #. module: website
-#. odoo-javascript
-#: code:addons/website/static/src/xml/website.editor.xml:0
 #: model_terms:ir.ui.view,arch_db:website.bs_debug_view
 msgid "Headings 6"
 msgstr "العنوان 6"
@@ -7741,7 +7730,7 @@ msgstr "تحديد "
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_accordion_options
 msgid "Highlight Active"
-msgstr ""
+msgstr "تحديد النشطة "
 
 #. module: website
 #. odoo-javascript
@@ -8576,7 +8565,7 @@ msgstr "المقدمة "
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.snippets
 msgid "Intro Pill"
-msgstr ""
+msgstr "المقدمة "
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.new_page_template_landing_s_showcase
@@ -8903,7 +8892,7 @@ msgstr "المقاييس الرئيسية لإنجازات <br/>الشركة "
 #: model_terms:ir.ui.view,arch_db:website.s_masonry_block_alternation_text_image_text_template
 #: model_terms:ir.ui.view,arch_db:website.s_masonry_block_alternation_text_template
 msgid "Key Milestone"
-msgstr "مؤشر التقدم الرئيسية "
+msgstr "مؤشر التقدم الرئيسي "
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.snippets
@@ -9381,8 +9370,6 @@ msgid "Linkedin"
 msgstr "Linkedin"
 
 #. module: website
-#. odoo-javascript
-#: code:addons/website/static/src/xml/website.editor.xml:0
 #: model_terms:ir.ui.view,arch_db:website.snippet_options
 msgid "Links"
 msgstr "الروابط"
@@ -10761,7 +10748,7 @@ msgstr "الخيار 3 "
 #. odoo-javascript
 #: code:addons/website/static/src/snippets/s_website_form/options.js:0
 msgid "Option List"
-msgstr ""
+msgstr "قائمة الخيارات "
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_website_form_options
@@ -11640,7 +11627,7 @@ msgstr "قائمة أسعار لمقهى "
 #: model:website.configurator.feature,name:website.feature_page_pricing
 #: model_terms:ir.ui.view,arch_db:website.pricing
 msgid "Pricing"
-msgstr "التسعير"
+msgstr "الأسعار "
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.new_page_template_groups
@@ -11654,12 +11641,6 @@ msgstr "خطط التسعير "
 #: model_terms:ir.ui.view,arch_db:website.snippet_options
 msgid "Primary"
 msgstr "الرئيسي"
-
-#. module: website
-#. odoo-javascript
-#: code:addons/website/static/src/xml/website.editor.xml:0
-msgid "Primary Buttons"
-msgstr "الأزرار الرئيسية "
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.snippet_options
@@ -11863,6 +11844,11 @@ msgid "Punchy Image"
 msgstr "صورة مثيرة للاهتمام "
 
 #. module: website
+#: model:ir.model.fields,field_description:website.field_website__domain_punycode
+msgid "Punycode Domain"
+msgstr ""
+
+#. module: website
 #: model_terms:ir.ui.view,arch_db:website.cookie_policy
 msgid "Purpose"
 msgstr "الهدف "
@@ -11908,7 +11894,7 @@ msgstr "اقتباسات "
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.snippets
 msgid "Quotes Minimal"
-msgstr ""
+msgstr "اقتباسات مبسطة "
 
 #. module: website
 #: model:ir.model,name:website.model_ir_qweb
@@ -11939,7 +11925,7 @@ msgstr "راديو "
 #. odoo-javascript
 #: code:addons/website/static/src/snippets/s_website_form/options.js:0
 msgid "Radio Button List"
-msgstr ""
+msgstr "قائمة أزرار الاختيار "
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_website_form_options
@@ -12657,12 +12643,6 @@ msgstr "الراديو الافتراضي الثاني "
 #: model_terms:ir.ui.view,arch_db:website.snippet_options
 msgid "Secondary"
 msgstr "الثانوي "
-
-#. module: website
-#. odoo-javascript
-#: code:addons/website/static/src/xml/website.editor.xml:0
-msgid "Secondary Buttons"
-msgstr "الأزرار الثانوية "
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.snippet_options
@@ -13762,8 +13742,6 @@ msgid "Test your robots.txt with Google Search Console"
 msgstr "قم باختبار robots.txt باستخدام وحدة تحكم بحث Google "
 
 #. module: website
-#. odoo-javascript
-#: code:addons/website/static/src/xml/website.editor.xml:0
 #: model_terms:ir.ui.view,arch_db:website.grid_layout_options
 #: model_terms:ir.ui.view,arch_db:website.s_website_form_options
 #: model_terms:ir.ui.view,arch_db:website.snippet_options
@@ -13977,6 +13955,12 @@ msgstr "الحد هو أكبر عدد ممكن من السجلات المحضر�
 #: code:addons/website/models/website_snippet_filter.py:0
 msgid "The limit must be between 1 and 16."
 msgstr "يجب أن يكون الحد بين 1 و 16. "
+
+#. module: website
+#. odoo-javascript
+#: code:addons/website/static/src/client_actions/configurator/configurator.js:0
+msgid "The logo is too large. Please upload a logo smaller than 2.5 MB."
+msgstr "الشعار كبير جداً. يُرجى رفع شعار أصغر من 2.5 ميغابايت. "
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_website_form_options
@@ -16234,12 +16218,6 @@ msgstr ""
 #: model:ir.model.fields,field_description:website.field_website__social_twitter
 msgid "X Account"
 msgstr "حساب X "
-
-#. module: website
-#. odoo-javascript
-#: code:addons/website/static/src/xml/website_form_editor.xml:0
-msgid "Yes"
-msgstr "نعم"
 
 #. module: website
 #. odoo-javascript

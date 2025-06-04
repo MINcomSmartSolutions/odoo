@@ -261,12 +261,12 @@ msgstr "Саатал:"
 #. module: purchase_stock
 #: model_terms:ir.ui.view,arch_db:purchase_stock.purchase_order_view_form_inherit
 msgid "Forecast Report"
-msgstr ""
+msgstr "Таамаглалын тайлан"
 
 #. module: purchase_stock
 #: model:ir.model.fields,field_description:purchase_stock.field_purchase_order_line__forecasted_issue
 msgid "Forecasted Issue"
-msgstr ""
+msgstr "Таамагласан хүндрэл"
 
 #. module: purchase_stock
 #: model:ir.model.fields.selection,name:purchase_stock.selection__purchase_order__receipt_status__full
@@ -404,6 +404,8 @@ msgid ""
 "Odoo is not able to generate the anglo saxon entries. The total valuation of"
 " %s is zero."
 msgstr ""
+"Odoo англи-саксоны бүртгэлийн бичилт үүсгэж чадсангүй. %s-ын нийт өртөгийн "
+"дүн нь тэг байна."
 
 #. module: purchase_stock
 #: model_terms:ir.ui.view,arch_db:purchase_stock.vendor_delay_report_view_graph
@@ -624,7 +626,7 @@ msgstr "Нийлүүлэгчдийг шууд захиалагчдад хүрг�
 #. odoo-javascript
 #: code:addons/purchase_stock/static/src/purchase_stock_forecasted/forecasted_details.xml:0
 msgid "Requests for quotation"
-msgstr ""
+msgstr "Худалдан авалтын үнийн санал"
 
 #. module: purchase_stock
 #: model:ir.model.fields,field_description:purchase_stock.field_purchase_order_line__move_ids
@@ -661,7 +663,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:purchase_stock.field_product_replenish__show_vendor
 #: model:ir.model.fields,field_description:purchase_stock.field_stock_replenish_mixin__show_vendor
 msgid "Show Vendor"
-msgstr ""
+msgstr "Нийлүүлэгч харах"
 
 #. module: purchase_stock
 #: model:ir.model.fields,field_description:purchase_stock.field_stock_warehouse_orderpoint__show_supplier

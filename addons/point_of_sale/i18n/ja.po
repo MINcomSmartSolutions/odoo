@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-10 13:22+0000\n"
+"POT-Creation-Date: 2025-05-14 20:46+0000\n"
 "PO-Revision-Date: 2024-09-25 09:41+0000\n"
 "Last-Translator: Junko Augias, 2025\n"
 "Language-Team: Japanese (https://app.transifex.com/odoo/teams/41243/ja/)\n"
@@ -85,6 +85,12 @@ msgstr "%(payment_method)s %(partner)sのPOS支払、%(session)sでの"
 #. module: point_of_sale
 #. odoo-python
 #: code:addons/point_of_sale/models/pos_order.py:0
+msgid "%(product_name)s: Deleted line (quantity: %(qty)s)"
+msgstr "%(product_name)s: 削除された明細 (数量: %(qty)s)"
+
+#. module: point_of_sale
+#. odoo-python
+#: code:addons/point_of_sale/models/pos_order.py:0
 msgid "%(product_name)s: Ordered quantity: %(old_qty)s"
 msgstr "%(product_name)s: オーダ数量: %(old_qty)s"
 
@@ -93,6 +99,12 @@ msgstr "%(product_name)s: オーダ数量: %(old_qty)s"
 #: code:addons/point_of_sale/models/pos_order.py:0
 msgid "%(refunded_order)s REFUND"
 msgstr "%(refunded_order)s 返金"
+
+#. module: point_of_sale
+#. odoo-python
+#: code:addons/point_of_sale/models/pos_session.py:0
+msgid "%(title)s %(product_name)s with %(taxes)s"
+msgstr "%(title)s %(product_name)s 税: %(taxes)s"
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -120,16 +132,10 @@ msgid "%s orders imported"
 msgstr "%s オーダがインポートされました"
 
 #. module: point_of_sale
-#. odoo-javascript
-#: code:addons/point_of_sale/static/src/app/screens/product_screen/product_screen.js:0
-msgid "%s product(s) found for \"%s\"."
-msgstr "%sプロダクトが \"%s\"用に見つかりました。"
-
-#. module: point_of_sale
 #. odoo-python
-#: code:addons/point_of_sale/models/pos_order.py:0
-msgid "%s: Deleted line"
-msgstr "%s: 削除済明細"
+#: code:addons/point_of_sale/models/pos_session.py:0
+msgid "%s untaxed"
+msgstr "%s 税抜金額"
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -333,7 +339,7 @@ msgid ""
 "             %(pos_name)s amounting in %(amount)s from %(company_name)s. "
 "</p>"
 msgstr ""
-"<p> %(client_name)s様、<br/>領収書 %(is_invoiced)s             %(pos_name)s金額 "
+"<p> %(client_name)s様、<br/>レシート %(is_invoiced)s             %(pos_name)s金額 "
 "%(amount)s 発行元:%(company_name)sをお送りします</p>"
 
 #. module: point_of_sale
@@ -360,7 +366,7 @@ msgstr "<span class=\"o_stat_text\">現金レジスタ</span>"
 #. module: point_of_sale
 #: model_terms:ir.ui.view,arch_db:point_of_sale.view_pos_session_form
 msgid "<span class=\"o_stat_text\">Journal Items</span>"
-msgstr "<span class=\"o_stat_text\">仕訳項目</span>"
+msgstr "<span class=\"o_stat_text\">仕訳明細</span>"
 
 #. module: point_of_sale
 #: model_terms:ir.ui.view,arch_db:point_of_sale.res_config_settings_view_form
@@ -447,7 +453,7 @@ msgstr "<strong>合計</strong>"
 #. odoo-javascript
 #: code:addons/point_of_sale/static/src/app/screens/payment_screen/payment_screen.js:0
 msgid "? Clicking \"Confirm\" will validate the payment."
-msgstr "? '確認'をクリックすると、支払いが検証されます。"
+msgstr "? \"確定\" をクリックすると、支払いが検証されます。"
 
 #. module: point_of_sale
 #: model:ir.model.fields,help:point_of_sale.field_pos_config__uuid
@@ -496,12 +502,12 @@ msgstr "注文のセッション固有のシーケンス番号"
 #. module: point_of_sale
 #: model:ir.model.fields,help:point_of_sale.field_pos_config__receipt_footer
 msgid "A short text that will be inserted as a footer in the printed receipt."
-msgstr "印刷された領収書にフッタとして挿入される短いテキスト。"
+msgstr "印刷されたレシートにフッタとして挿入される短いテキスト。"
 
 #. module: point_of_sale
 #: model:ir.model.fields,help:point_of_sale.field_pos_config__receipt_header
 msgid "A short text that will be inserted as a header in the printed receipt."
-msgstr "印刷された領収書のヘッダとして挿入される短いテキスト。"
+msgstr "印刷されたレシートのヘッダとして挿入される短いテキスト。"
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -527,17 +533,17 @@ msgstr "端末でViva Walletを使用するか、電話でタップして支払�
 #. module: point_of_sale
 #: model_terms:ir.ui.view,arch_db:point_of_sale.res_config_settings_view_form
 msgid "Accept payments with a PayTM payment terminal"
-msgstr "PayTM決済端末での支払を承認"
+msgstr "PayTM決済端末での支払を受け付ける"
 
 #. module: point_of_sale
 #: model_terms:ir.ui.view,arch_db:point_of_sale.res_config_settings_view_form
 msgid "Accept payments with a Razorpay payment terminal"
-msgstr "Razorpay決済端末で支払いを受ける"
+msgstr "Razorpay決済端末で支払いを受け付ける"
 
 #. module: point_of_sale
 #: model_terms:ir.ui.view,arch_db:point_of_sale.res_config_settings_view_form
 msgid "Accept payments with a Six payment terminal"
-msgstr "シックス決済端末での支払いを受け入れる"
+msgstr "シックス決済端末での支払いを受け付ける"
 
 #. module: point_of_sale
 #: model_terms:ir.ui.view,arch_db:point_of_sale.res_config_settings_view_form
@@ -636,7 +642,7 @@ msgstr "point_of_sale用のSMS機能を有効化する"
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_config__active
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_payment_method__active
 msgid "Active"
-msgstr "有効化"
+msgstr "アクティブ"
 
 #. module: point_of_sale
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_session__activity_ids
@@ -688,7 +694,7 @@ msgstr "レシートに5桁のコードを追加し、ユーザがポータル�
 #. odoo-javascript
 #: code:addons/point_of_sale/static/src/app/navbar/closing_popup/closing_popup.xml:0
 msgid "Add a closing note..."
-msgstr "終了ノートを追加..."
+msgstr "クロージングメモを追加..."
 
 #. module: point_of_sale
 #: model_terms:ir.ui.view,arch_db:point_of_sale.res_config_settings_view_form
@@ -720,7 +726,7 @@ msgstr "開始ノートを追加..."
 #. module: point_of_sale
 #: model_terms:ir.ui.view,arch_db:point_of_sale.res_config_settings_view_form
 msgid "Add internal notes on order lines for the kitchen"
-msgstr "厨房へのオーダ明細に内部ノートを追加"
+msgstr "キッチンへのオーダ明細に内部メモを追加"
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -889,6 +895,7 @@ msgstr "金額合計"
 #. module: point_of_sale
 #. odoo-javascript
 #: code:addons/point_of_sale/static/src/app/utils/qr_code_popup/qr_code_popup.xml:0
+#: code:addons/point_of_sale/static/src/customer_display/customer_facing_qr.xml:0
 msgid "Amount:"
 msgstr "金額:"
 
@@ -1077,7 +1084,7 @@ msgstr "AvaTax PoS 統合"
 #. module: point_of_sale
 #: model_terms:ir.ui.view,arch_db:point_of_sale.res_config_settings_view_form
 msgid "Available"
-msgstr "処理可能"
+msgstr "利用可能"
 
 #. module: point_of_sale
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_order__available_payment_method_ids
@@ -1148,13 +1155,13 @@ msgstr "ベーグル"
 #. odoo-javascript
 #: code:addons/point_of_sale/static/src/backend/pos_kanban_view/pos_kanban_view.js:0
 msgid "Bakery"
-msgstr "製パン店"
+msgstr "ベーカリー"
 
 #. module: point_of_sale
 #. odoo-python
 #: code:addons/point_of_sale/models/pos_config.py:0
 msgid "Bakery Shop"
-msgstr "製パン店 店舗"
+msgstr "ベーカリー 店舗"
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -1209,12 +1216,12 @@ msgstr "バーコードスキャナ/カードリーダー"
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_config__basic_receipt
 #: model:ir.model.fields,field_description:point_of_sale.field_res_config_settings__pos_basic_receipt
 msgid "Basic Receipt"
-msgstr "基本の領収書"
+msgstr "基本レシート"
 
 #. module: point_of_sale
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_session__cash_register_difference
 msgid "Before Closing Difference"
-msgstr "違いを閉じる前に"
+msgstr "レジ締め前の差額"
 
 #. module: point_of_sale
 #: model_terms:ir.ui.view,arch_db:point_of_sale.ticket_validation_screen
@@ -1373,6 +1380,18 @@ msgid "Cannot return change without a cash payment method"
 msgstr "現金支払い方法なしで変更を戻すことはできません"
 
 #. module: point_of_sale
+#. odoo-javascript
+#: code:addons/point_of_sale/static/src/app/screens/scale_screen/scale_service.js:0
+msgid "Cannot weigh product - IoT Box is disconnected"
+msgstr "プロダクトの計量ができません - IoT Boxが接続されていません。"
+
+#. module: point_of_sale
+#. odoo-javascript
+#: code:addons/point_of_sale/static/src/app/screens/scale_screen/scale_service.js:0
+msgid "Cannot weigh product - Scale is not connected to IoT Box"
+msgstr "プロダクトの計量ができません - スケールがIoT Boxに接続されていません"
+
+#. module: point_of_sale
 #. odoo-python
 #: code:addons/point_of_sale/models/pos_config.py:0
 msgid "Card"
@@ -1427,7 +1446,7 @@ msgstr "現金 %(session_name)s"
 #. odoo-python
 #: code:addons/point_of_sale/models/pos_config.py:0
 msgid "Cash Bakery"
-msgstr "現金 製パン店"
+msgstr "現金 ベーカリー"
 
 #. module: point_of_sale
 #. odoo-python
@@ -1711,10 +1730,16 @@ msgid ""
 msgstr "顧客の種類 (免税、イートインとお持ち帰りなど)に応じて、注文時に特定の会計ポジションを選択します。"
 
 #. module: point_of_sale
+#. odoo-javascript
+#: code:addons/point_of_sale/static/src/app/generic_components/list_container/list_container.js:0
+msgid "Choose an order"
+msgstr "オーダを選択"
+
+#. module: point_of_sale
 #: model:ir.model.fields,help:point_of_sale.field_res_company__point_of_sale_ticket_portal_url_display_mode
 #: model:ir.model.fields,help:point_of_sale.field_res_config_settings__point_of_sale_ticket_portal_url_display_mode
 msgid "Choose how the URL to the portal will be print on the receipt."
-msgstr "ポータルサイトのURLを領収書にどのように印刷するかを選択します。"
+msgstr "ポータルサイトのURLをレシートにどのように印刷するかを選択します。"
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -1846,7 +1871,7 @@ msgstr "セッション終了"
 #. odoo-python
 #: code:addons/point_of_sale/models/pos_session.py:0
 msgid "Closing difference in %(payment_method)s (%(session)s)"
-msgstr "クロージング差異%(payment_method)s(%(session)s)"
+msgstr "クロージング差額%(payment_method)s(%(session)s)"
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -1895,8 +1920,16 @@ msgstr "コイン/メモ"
 #. module: point_of_sale
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_category__color
 #: model:product.attribute,name:point_of_sale.product_attribute_color
+#: model_terms:ir.ui.view,arch_db:point_of_sale.product_product_view_form_normalized_pos
+#: model_terms:ir.ui.view,arch_db:point_of_sale.product_template_form_view
 msgid "Color"
 msgstr "色"
+
+#. module: point_of_sale
+#: model:ir.model.fields,field_description:point_of_sale.field_product_product__color
+#: model:ir.model.fields,field_description:point_of_sale.field_product_template__color
+msgid "Color Index"
+msgstr "カラーインデクス"
 
 #. module: point_of_sale
 #. odoo-python
@@ -1987,7 +2020,7 @@ msgstr "少なくとも1つのPOSを構成します。"
 #: code:addons/point_of_sale/static/src/app/utils/date_picker_popup/date_picker_popup.js:0
 #: code:addons/point_of_sale/static/src/app/utils/money_details_popup/money_details_popup.xml:0
 msgid "Confirm"
-msgstr "確認"
+msgstr "確定"
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -1999,7 +2032,7 @@ msgstr "支払を確認"
 #. odoo-javascript
 #: code:addons/point_of_sale/static/src/app/utils/input_popups/number_popup.js:0
 msgid "Confirm?"
-msgstr "確認しましたか？"
+msgstr "確定?"
 
 #. module: point_of_sale
 #: model_terms:ir.ui.view,arch_db:point_of_sale.pos_config_view_form
@@ -2032,6 +2065,12 @@ msgstr "プロキシへの接続"
 
 #. module: point_of_sale
 #. odoo-javascript
+#: code:addons/point_of_sale/static/src/customer_display/utils.js:0
+msgid "Connecting to the IoT Box"
+msgstr "IoT Boxに接続中"
+
+#. module: point_of_sale
+#. odoo-javascript
 #: code:addons/point_of_sale/static/src/app/errors/error_handlers.js:0
 msgid "Connection Lost"
 msgstr "接続がなくなりました"
@@ -2041,6 +2080,18 @@ msgstr "接続がなくなりました"
 #: code:addons/point_of_sale/static/src/app/screens/payment_screen/payment_lines/payment_lines.xml:0
 msgid "Connection error"
 msgstr "接続エラー"
+
+#. module: point_of_sale
+#. odoo-javascript
+#: code:addons/point_of_sale/static/src/customer_display/utils.js:0
+msgid "Connection failed"
+msgstr "接続に失敗しました"
+
+#. module: point_of_sale
+#. odoo-javascript
+#: code:addons/point_of_sale/static/src/customer_display/utils.js:0
+msgid "Connection successful"
+msgstr "接続に成功しました"
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -2561,12 +2612,12 @@ msgstr "机"
 #. module: point_of_sale
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_close_session_wizard__account_id
 msgid "Destination account"
-msgstr "移動先の勘定科目"
+msgstr "振替先勘定科目"
 
 #. module: point_of_sale
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_close_session_wizard__account_readonly
 msgid "Destination account is readonly"
-msgstr "移動先の勘定科目は読取専用です"
+msgstr "振替先勘定科目は読取専用です"
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -2586,7 +2637,7 @@ msgstr "差異"
 #. odoo-python
 #: code:addons/point_of_sale/models/pos_session.py:0
 msgid "Difference at closing PoS session"
-msgstr "PoSセッション終了時の違い"
+msgstr "PoSセッション終了時の差額"
 
 #. module: point_of_sale
 #: model:ir.model.fields,help:point_of_sale.field_pos_session__cash_register_difference
@@ -2644,30 +2695,30 @@ msgstr "破棄"
 #. module: point_of_sale
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_order_line__discount
 msgid "Discount (%)"
-msgstr "値引 (%)"
+msgstr "割引 (%)"
 
 #. module: point_of_sale
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_order_line__notice
 msgid "Discount Notice"
-msgstr "値引注記"
+msgstr "割引注記"
 
 #. module: point_of_sale
 #. odoo-javascript
 #: code:addons/point_of_sale/static/src/app/navbar/sale_details_button/sales_detail_report.xml:0
 msgid "Discount:"
-msgstr "値引:"
+msgstr "割引:"
 
 #. module: point_of_sale
 #: model:ir.model.fields.selection,name:point_of_sale.selection__barcode_rule__type__discount
 msgid "Discounted Product"
-msgstr "値引対象プロダクト"
+msgstr "割引対象プロダクト"
 
 #. module: point_of_sale
 #. odoo-javascript
 #: code:addons/point_of_sale/static/src/app/models/pos_order.js:0
 #: model_terms:ir.ui.view,arch_db:point_of_sale.pos_session_sales_details
 msgid "Discounts"
-msgstr "値引"
+msgstr "割引"
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -2799,14 +2850,12 @@ msgid "Edited order(s) during the session:%s"
 msgstr "セッション中に編集されたオーダ:%s"
 
 #. module: point_of_sale
-#. odoo-javascript
-#: code:addons/point_of_sale/static/src/app/debug/debug_widget.xml:0
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_config__iface_electronic_scale
 #: model:ir.model.fields,field_description:point_of_sale.field_res_config_settings__pos_iface_electronic_scale
 #: model_terms:ir.ui.view,arch_db:point_of_sale.pos_config_view_form
 #: model_terms:ir.ui.view,arch_db:point_of_sale.res_config_settings_view_form
 msgid "Electronic Scale"
-msgstr "電子はかり"
+msgstr "電子スケール"
 
 #. module: point_of_sale
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_order__email
@@ -2862,7 +2911,7 @@ msgstr "リモート接続されたバーコードスキャナーでバーコー
 #. module: point_of_sale
 #: model:ir.model.fields,help:point_of_sale.field_pos_config__iface_electronic_scale
 msgid "Enables Electronic Scale integration."
-msgstr "電子スケール統合を可能にします。"
+msgstr "電子スケール連携を有効にします。"
 
 #. module: point_of_sale
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_details_wizard__end_date
@@ -3136,6 +3185,12 @@ msgid "Generation of your order references"
 msgstr "オーダ参照の生成"
 
 #. module: point_of_sale
+#. odoo-javascript
+#: code:addons/point_of_sale/static/src/app/screens/scale_screen/scale_screen.xml:0
+msgid "Get Weight"
+msgstr "重量を計る"
+
+#. module: point_of_sale
 #: model_terms:ir.ui.view,arch_db:point_of_sale.ticket_validation_screen
 msgid "Get my invoice"
 msgstr "請求書を入手"
@@ -3149,7 +3204,7 @@ msgstr "プロダクトカテゴリのリストを表示する時に並び順を
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_config__module_pos_discount
 #: model:ir.model.fields,field_description:point_of_sale.field_res_config_settings__pos_module_pos_discount
 msgid "Global Discounts"
-msgstr "グローバル値引"
+msgstr "全体割引"
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -3205,6 +3260,11 @@ msgstr "POSでプロダクトをグループ化する"
 #: model_terms:ir.ui.view,arch_db:point_of_sale.res_config_settings_view_form
 msgid "Group items in the cart according to their category"
 msgstr "カート内のアイテムをカテゴリ別にグループ化します"
+
+#. module: point_of_sale
+#: model:ir.model,name:point_of_sale.model_ir_http
+msgid "HTTP Routing"
+msgstr "HTTPルーティング"
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -3468,7 +3528,7 @@ msgstr "内部注釈"
 #. module: point_of_sale
 #: model_terms:ir.ui.view,arch_db:point_of_sale.res_config_settings_view_form
 msgid "Internal Notes"
-msgstr "内部注記"
+msgstr "内部メモ"
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -3579,7 +3639,7 @@ msgstr "キオスクモード"
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_order__is_total_cost_computed
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_order_line__is_total_cost_computed
 msgid "Is Total Cost Computed"
-msgstr "全原価計算済"
+msgstr "原価合計を計算済"
 
 #. module: point_of_sale
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_session__is_in_company_currency
@@ -3657,20 +3717,20 @@ msgstr "仕訳"
 #. module: point_of_sale
 #: model:ir.model,name:point_of_sale.model_account_move_line
 msgid "Journal Item"
-msgstr "仕訳項目"
+msgstr "仕訳明細"
 
 #. module: point_of_sale
 #. odoo-python
 #: code:addons/point_of_sale/models/pos_session.py:0
 msgid "Journal Items"
-msgstr "仕訳項目"
+msgstr "仕訳明細"
 
 #. module: point_of_sale
 #. odoo-javascript
 #: code:addons/point_of_sale/static/src/app/screens/product_screen/control_buttons/control_buttons.js:0
 #: code:addons/point_of_sale/static/src/app/screens/product_screen/control_buttons/customer_note_button/customer_note_button.js:0
 msgid "Kitchen Note"
-msgstr "厨房メモ"
+msgstr "キッチンメモ"
 
 #. module: point_of_sale
 #: model:ir.model.fields,field_description:point_of_sale.field_digest_digest__kpi_pos_total_value
@@ -4094,6 +4154,12 @@ msgstr "名称"
 
 #. module: point_of_sale
 #. odoo-javascript
+#: code:addons/point_of_sale/static/src/app/navbar/navbar.js:0
+msgid "Navigate to your PoS Customer Display on the other computer"
+msgstr "他のパソコンで、PoS顧客ディスプレイに移動します"
+
+#. module: point_of_sale
+#. odoo-javascript
 #: code:addons/point_of_sale/static/src/app/screens/receipt_screen/receipt/order_receipt.xml:0
 msgid "Need an invoice for your purchase ?"
 msgstr "購買の顧客請求書が必要ですか？"
@@ -4265,12 +4331,6 @@ msgid "No more customer found for \"%s\"."
 msgstr " \"%s\"の顧客がもう見つかりません。"
 
 #. module: point_of_sale
-#. odoo-javascript
-#: code:addons/point_of_sale/static/src/app/screens/product_screen/product_screen.js:0
-msgid "No more product found for \"%s\"."
-msgstr " \"%s\"のプロダクトがもう見つかりません。"
-
-#. module: point_of_sale
 #. odoo-python
 #: code:addons/point_of_sale/models/pos_order.py:0
 msgid ""
@@ -4282,6 +4342,12 @@ msgstr "現在、未決済のセッションはありません。オーダを確
 #: model_terms:ir.actions.act_window,help:point_of_sale.action_pos_pos_form
 msgid "No orders found"
 msgstr "注文が見つかりません"
+
+#. module: point_of_sale
+#. odoo-javascript
+#: code:addons/point_of_sale/static/src/app/screens/product_screen/product_screen.js:0
+msgid "No other products found for \"%s\"."
+msgstr "\"%s\" 用に他のプロダクトが見つかりません。"
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -4439,7 +4505,7 @@ msgstr "この払戻し行には、マイナスの数量しか入力できませ
 #. odoo-python
 #: code:addons/point_of_sale/models/pos_config.py:0
 msgid "Only administrators can edit receipt headers and footers"
-msgstr "管理者のみが領収書のヘッダとフッタを編集できます。"
+msgstr "管理者のみがレシートのヘッダとフッタを編集できます。"
 
 #. module: point_of_sale
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_config__only_round_cash_method
@@ -4652,7 +4718,7 @@ msgid ""
 "            order updates in the kitchen/bar when the waiter updates the order."
 msgstr ""
 "オーダプリンタは、レストランやバーにて、\n"
-"　　　ウェイターのオーダ更新の際に厨房やバーで更新情報を印刷するのに使用します。"
+"　　　ウェイターのオーダ更新の際にキッチンやバーで更新情報を印刷するのに使用します。"
 
 #. module: point_of_sale
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_order__name
@@ -4693,6 +4759,12 @@ msgstr "オーダ明細"
 #: code:addons/point_of_sale/static/src/app/screens/ticket_screen/ticket_screen.xml:0
 msgid "Order number"
 msgstr "オーダ番号"
+
+#. module: point_of_sale
+#. odoo-javascript
+#: code:addons/point_of_sale/static/src/app/store/pos_store.js:0
+msgid "Order saved for later"
+msgstr "後に保存されたオーダ"
 
 #. module: point_of_sale
 #: model:ir.model.fields,help:point_of_sale.field_pos_order_line__refund_orderline_ids
@@ -4940,7 +5012,7 @@ msgstr "支払名デモ"
 #. module: point_of_sale
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_payment__ticket
 msgid "Payment Receipt Info"
-msgstr "領収書情報"
+msgstr "レシート情報"
 
 #. module: point_of_sale
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_make_payment__payment_name
@@ -5087,7 +5159,7 @@ msgstr "お願いします。"
 #. odoo-javascript
 #: code:addons/point_of_sale/static/src/app/screens/payment_screen/payment_screen.js:0
 msgid "Please Confirm Large Amount"
-msgstr "大量に確認してください"
+msgstr "高額のため確認してください"
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -5194,6 +5266,7 @@ msgstr "クーポン番号を登録して下さい。"
 #. module: point_of_sale
 #. odoo-javascript
 #: code:addons/point_of_sale/static/src/app/utils/qr_code_popup/qr_code_popup.js:0
+#: code:addons/point_of_sale/static/src/customer_display/customer_facing_qr.js:0
 msgid "Please scan the QR code with %s"
 msgstr " %sでQRコードをスキャンして下さい。"
 
@@ -5208,6 +5281,12 @@ msgstr "支払方法を選択して下さい。"
 #: code:addons/point_of_sale/static/src/app/screens/payment_screen/payment_screen.js:0
 msgid "Please select the Customer"
 msgstr "お客様を選択してください"
+
+#. module: point_of_sale
+#. odoo-javascript
+#: code:addons/point_of_sale/static/src/app/navbar/navbar.js:0
+msgid "PoS Customer Display opened in a new window"
+msgstr "PoS顧客ディスプレイが新しいウィンドウで開かれました"
 
 #. module: point_of_sale
 #: model_terms:ir.ui.view,arch_db:point_of_sale.res_config_settings_view_form
@@ -5670,26 +5749,26 @@ msgstr "印刷"
 #. odoo-javascript
 #: code:addons/point_of_sale/static/src/app/screens/receipt_screen/receipt_screen.xml:0
 msgid "Print Basic Receipt"
-msgstr "基本の領収書を印刷"
+msgstr "基本レシートを印刷"
 
 #. module: point_of_sale
 #. odoo-javascript
 #: code:addons/point_of_sale/static/src/app/screens/receipt_screen/receipt_screen.xml:0
 msgid "Print Full Receipt"
-msgstr "完全な領収書を印刷"
+msgstr "詳細レシートを印刷"
 
 #. module: point_of_sale
 #. odoo-javascript
 #: code:addons/point_of_sale/static/src/app/debug/debug_widget.xml:0
 #: code:addons/point_of_sale/static/src/app/screens/ticket_screen/ticket_screen.xml:0
 msgid "Print Receipt"
-msgstr "レシート印刷"
+msgstr "レシートを印刷"
 
 #. module: point_of_sale
 #. odoo-javascript
 #: code:addons/point_of_sale/static/src/app/navbar/navbar.xml:0
 msgid "Print Report"
-msgstr "レポート印刷"
+msgstr "レポートを印刷"
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -5711,12 +5790,12 @@ msgstr "価格を表示しない基本チケットを印刷します。ギフト
 msgid ""
 "Print information on the receipt to allow the customer to easily access the "
 "invoice anytime, from Odoo's portal."
-msgstr ""
+msgstr "顧客がいつでもOdooのポータルから顧客請求書に簡単にアクセスできるように、レシートに情報を印刷します。"
 
 #. module: point_of_sale
 #: model_terms:ir.ui.view,arch_db:point_of_sale.res_config_settings_view_form
 msgid "Print orders at the kitchen, at the bar, etc."
-msgstr "厨房、バーなどでオーダを印刷"
+msgstr "キッチン、バーなどでオーダを印刷"
 
 #. module: point_of_sale
 #: model_terms:ir.ui.view,arch_db:point_of_sale.res_config_settings_view_form
@@ -5984,6 +6063,7 @@ msgstr "紫"
 #. module: point_of_sale
 #. odoo-javascript
 #: code:addons/point_of_sale/static/src/app/utils/qr_code_popup/qr_code_popup.xml:0
+#: code:addons/point_of_sale/static/src/customer_display/customer_facing_qr.xml:0
 msgid "QR Code"
 msgstr "QRコード"
 
@@ -6057,7 +6137,7 @@ msgstr "Razorpay決済端末"
 #. odoo-javascript
 #: code:addons/point_of_sale/static/src/app/debug/debug_widget.xml:0
 msgid "Read Weighing Scale"
-msgstr "体重計を読む"
+msgstr "スケールの読み取り"
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -6075,13 +6155,13 @@ msgstr "理由"
 #. odoo-javascript
 #: code:addons/point_of_sale/static/src/app/screens/ticket_screen/ticket_screen.js:0
 msgid "Receipt"
-msgstr "入荷"
+msgstr "レシート"
 
 #. module: point_of_sale
 #. odoo-python
 #: code:addons/point_of_sale/models/pos_order.py:0
 msgid "Receipt %s"
-msgstr "領収書%s"
+msgstr "レシート%s"
 
 #. module: point_of_sale
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_config__receipt_footer
@@ -6101,7 +6181,7 @@ msgstr "レシートヘッダ"
 #: code:addons/point_of_sale/static/src/app/screens/ticket_screen/ticket_screen.xml:0
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_order__pos_reference
 msgid "Receipt Number"
-msgstr "領収書番号"
+msgstr "レシート番号"
 
 #. module: point_of_sale
 #: model_terms:ir.ui.view,arch_db:point_of_sale.pos_config_view_form
@@ -6138,6 +6218,8 @@ msgstr "表示の更新"
 
 #. module: point_of_sale
 #. odoo-javascript
+#. odoo-python
+#: code:addons/point_of_sale/models/pos_session.py:0
 #: code:addons/point_of_sale/static/src/app/screens/product_screen/control_buttons/control_buttons.xml:0
 #: code:addons/point_of_sale/static/src/app/screens/ticket_screen/ticket_screen.xml:0
 msgid "Refund"
@@ -6249,7 +6331,7 @@ msgstr "請求書を再印刷"
 #. module: point_of_sale
 #: model_terms:ir.ui.view,arch_db:point_of_sale.ticket_request_with_code
 msgid "Request Invoice"
-msgstr ""
+msgstr "請求書をリクエスト"
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -6262,12 +6344,6 @@ msgstr "要求が送信されました"
 #: code:addons/point_of_sale/models/pos_config.py:0
 msgid "Rescue Sessions"
 msgstr "レスキューセッション"
-
-#. module: point_of_sale
-#. odoo-javascript
-#: code:addons/point_of_sale/static/src/app/debug/debug_widget.xml:0
-msgid "Reset"
-msgstr "リセット"
 
 #. module: point_of_sale
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_session__activity_user_id
@@ -6435,6 +6511,8 @@ msgid "Sale line"
 msgstr "販売行"
 
 #. module: point_of_sale
+#. odoo-python
+#: code:addons/point_of_sale/models/pos_session.py:0
 #: model_terms:ir.ui.view,arch_db:point_of_sale.pos_session_sales_details
 msgid "Sales"
 msgstr "販売"
@@ -6485,6 +6563,12 @@ msgstr "このページを保存して、戻って機能を設定してくださ
 #: code:addons/point_of_sale/static/src/app/navbar/proxy_status/proxy_status.js:0
 msgid "Scale"
 msgstr "スケール"
+
+#. module: point_of_sale
+#. odoo-javascript
+#: code:addons/point_of_sale/static/src/app/screens/scale_screen/scale_screen.js:0
+msgid "Scale error"
+msgstr "スケールエラー"
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -6631,7 +6715,7 @@ msgstr "支払い要求を送信する"
 #. module: point_of_sale
 #: model_terms:ir.ui.view,arch_db:point_of_sale.res_config_settings_view_form
 msgid "Send Text receipt Using sms"
-msgstr "SMSを使用してテキスト領収書を送信"
+msgstr "SMSを使用してテキストレシートを送信"
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -6728,12 +6812,6 @@ msgid "Set Maximum Difference"
 msgstr "最大差額を設定"
 
 #. module: point_of_sale
-#. odoo-javascript
-#: code:addons/point_of_sale/static/src/app/debug/debug_widget.xml:0
-msgid "Set Weight"
-msgstr "重量を設定する"
-
-#. module: point_of_sale
 #: model_terms:ir.ui.view,arch_db:point_of_sale.res_config_settings_view_form
 msgid ""
 "Set a maximum difference allowed between the expected and counted money "
@@ -6810,7 +6888,7 @@ msgstr "配送日"
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_config__picking_policy
 #: model:ir.model.fields,field_description:point_of_sale.field_res_config_settings__pos_picking_policy
 msgid "Shipping Policy"
-msgstr "配送方針"
+msgstr "配送ポリシー"
 
 #. module: point_of_sale
 #: model:product.attribute,name:point_of_sale.product_attribute_size_number
@@ -6922,7 +7000,7 @@ msgstr "プレビュー画面をスキップ"
 #. module: point_of_sale
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_order_line__skip_change
 msgid "Skip line when sending ticket to kitchen printers."
-msgstr "厨房プリンタにチケットを送信する際に明細をスキップします。"
+msgstr "キッチンプリンタにチケットを送信する際に明細をスキップします。"
 
 #. module: point_of_sale
 #: model:product.template,name:point_of_sale.small_shelf_product_template
@@ -7383,6 +7461,13 @@ msgstr "クレジットカードのブランド (Visa、AMEX等)"
 #. module: point_of_sale
 #. odoo-python
 #: code:addons/point_of_sale/models/pos_config.py:0
+msgid ""
+"The cash rounding strategy of the point of sale %(pos)s must be: '%(value)s'"
+msgstr "POS%(pos)sの丸め方針は以下である必要があります: '%(value)s'"
+
+#. module: point_of_sale
+#. odoo-python
+#: code:addons/point_of_sale/models/pos_config.py:0
 msgid "The default pricelist must be included in the available pricelists."
 msgstr "デフォルトの価格表は、利用可能な価格表に含まれている必要があります。"
 
@@ -7554,7 +7639,7 @@ msgstr "レシートを自動印刷できる場合は、レシート画面をス
 #: model:ir.model.fields,help:point_of_sale.field_pos_config__iface_print_auto
 #: model:ir.model.fields,help:point_of_sale.field_res_config_settings__pos_iface_print_auto
 msgid "The receipt will automatically be printed at the end of each order."
-msgstr "領収書は、各注文の最後に自動的に印刷されます。"
+msgstr "レシートは、各注文の最後に自動的に印刷されます。"
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -7622,7 +7707,7 @@ msgstr "セッションが他のユーザによって終了されています。
 msgid ""
 "The transactions are processed by Adyen. Set your Adyen credentials on the "
 "related payment method."
-msgstr "トランザクションはAdyenによって処理されます。関連する支払い方法でAdyenの認証情報を設定します。"
+msgstr "取引はAdyenによって処理されます。関連する支払い方法でAdyenの認証情報を設定します。"
 
 #. module: point_of_sale
 #: model_terms:ir.ui.view,arch_db:point_of_sale.res_config_settings_view_form
@@ -7818,15 +7903,18 @@ msgstr "これは、特定の税率を暗示するオンサイトおよびテイ
 #. odoo-python
 #: code:addons/point_of_sale/models/account_journal.py:0
 msgid ""
-"This journal is associated with a payment method. You cannot archive it"
-msgstr "この仕訳帳は支払方法に関連付けられています。アーカイブできません。"
+"This journal is associated with a payment method. You cannot modify its type"
+msgstr "この仕訳帳は支払方法に関連付けられています。タイプは変更できません。"
 
 #. module: point_of_sale
 #. odoo-python
 #: code:addons/point_of_sale/models/account_journal.py:0
 msgid ""
-"This journal is associated with a payment method. You cannot modify its type"
-msgstr "この仕訳帳は支払方法に関連付けられています。タイプは変更できません。"
+"This journal is associated with payment method %(payment_method)s that is "
+"being used by order %(pos_order)s in the active pos session %(pos_session)s"
+msgstr ""
+"この仕訳帳は、支払方法%(payment_method)s "
+"(オーダ%(pos_order)sで使用されている、有効化されたposセッション%(pos_session)s内)に関連付けられています。"
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -7848,6 +7936,14 @@ msgid ""
 "associated to it. Create a new order for the new customer."
 msgstr ""
 "このオーダにはすでに%sの返金行があります。このオーダに関連する顧客を変更することはできません。新しい顧客のために新しいオーダを作成して下さい。"
+
+#. module: point_of_sale
+#. odoo-python
+#: code:addons/point_of_sale/models/pos_order.py:0
+msgid ""
+"This order has already been paid. You cannot set it back to draft or edit "
+"it."
+msgstr "このオーダはすでに支払いが完了しています。ドラフトに戻したり、編集したりすることはできません。"
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -7972,7 +8068,7 @@ msgstr "未返金:"
 #: model:ir.model.fields,field_description:point_of_sale.field_product_product__to_weight
 #: model:ir.model.fields,field_description:point_of_sale.field_product_template__to_weight
 msgid "To Weigh With Scale"
-msgstr "はかりで計量"
+msgstr "スケールで計量"
 
 #. module: point_of_sale
 #. odoo-python
@@ -8026,12 +8122,12 @@ msgstr "合計"
 #. odoo-javascript
 #: code:addons/point_of_sale/static/src/app/screens/product_screen/product_info_popup/product_info_popup.xml:0
 msgid "Total Cost:"
-msgstr "合計原価:"
+msgstr "原価合計:"
 
 #. module: point_of_sale
 #: model:ir.model.fields,field_description:point_of_sale.field_report_pos_order__total_discount
 msgid "Total Discount"
-msgstr "合計値引"
+msgstr "割引合計"
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -8068,7 +8164,7 @@ msgstr "支払総額。"
 #. module: point_of_sale
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_order_line__total_cost
 msgid "Total cost"
-msgstr "合計原価:"
+msgstr "原価合計:"
 
 #. module: point_of_sale
 #: model_terms:ir.ui.view,arch_db:point_of_sale.view_pos_order_line
@@ -8246,6 +8342,12 @@ msgstr "不明なバーコード"
 #: code:addons/point_of_sale/static/src/app/utils/hooks.js:0
 msgid "Unknown Error"
 msgstr "不明なエラー"
+
+#. module: point_of_sale
+#. odoo-javascript
+#: code:addons/point_of_sale/static/src/app/screens/scale_screen/scale_service.js:0
+msgid "Unnamed Product"
+msgstr "無名プロダクト"
 
 #. module: point_of_sale
 #: model_terms:ir.ui.view,arch_db:point_of_sale.product_product_view_form_normalized_pos
@@ -8454,9 +8556,9 @@ msgstr "ウェブサイト通信履歴"
 
 #. module: point_of_sale
 #. odoo-javascript
-#: code:addons/point_of_sale/static/src/app/debug/debug_widget.xml:0
-msgid "Weighing"
-msgstr "計量"
+#: code:addons/point_of_sale/static/src/customer_display/customer_display.xml:0
+msgid "Weighing Product:"
+msgstr "プロダクトの計量:"
 
 #. module: point_of_sale
 #: model:ir.model.fields.selection,name:point_of_sale.selection__barcode_rule__type__weight
@@ -8645,6 +8747,14 @@ msgstr "セッションが開いている間は、POSカテゴリを削除する
 
 #. module: point_of_sale
 #. odoo-python
+#: code:addons/point_of_sale/models/account_cash_rounding.py:0
+msgid ""
+"You cannot delete a rounding method that is used in a Point of Sale "
+"configuration."
+msgstr "POSの設定で使用されている丸め方法は削除できません。"
+
+#. module: point_of_sale
+#. odoo-python
 #: code:addons/point_of_sale/models/pos_payment.py:0
 msgid "You cannot edit a payment for a posted order."
 msgstr "記帳済オーダの支払を編集することはできません。"
@@ -8705,6 +8815,18 @@ msgstr "POSインターフェースを介して販売するすべての製品を
 #: code:addons/point_of_sale/models/product.py:0
 msgid "You must first remove this product from the %s combo"
 msgstr "まずこのプロダクトを%sコンボから削除する必要があります。"
+
+#. module: point_of_sale
+#. odoo-python
+#: code:addons/point_of_sale/models/pos_config.py:0
+msgid "You must have 'Administration Settings' access to load clothes data."
+msgstr "データを読み込むには、' 管理設定' へのアクセス権が必要です。"
+
+#. module: point_of_sale
+#. odoo-python
+#: code:addons/point_of_sale/models/pos_config.py:0
+msgid "You must have 'Administration Settings' access to load furniture data."
+msgstr "家具データを読み込むには、'管理設定' へのアクセス権が必要です。"
 
 #. module: point_of_sale
 #. odoo-python
@@ -8788,13 +8910,7 @@ msgstr "Eメールで"
 #. odoo-javascript
 #: code:addons/point_of_sale/static/src/app/generic_components/orderline/orderline.xml:0
 msgid "discount"
-msgstr "値引"
-
-#. module: point_of_sale
-#. odoo-javascript
-#: code:addons/point_of_sale/static/src/app/screens/receipt_screen/receipt_screen.xml:0
-msgid "e.g. 0123456789"
-msgstr "例: 0123456789"
+msgstr "割引"
 
 #. module: point_of_sale
 #: model_terms:ir.ui.view,arch_db:point_of_sale.pos_payment_method_view_form
@@ -8820,12 +8936,6 @@ msgstr "例:返品ポリシー、私たちと一緒に買い物をしてくれ�
 #: model_terms:ir.ui.view,arch_db:point_of_sale.product_pos_category_form_view
 msgid "e.g. Soft Drinks"
 msgstr "例:ソフトドリンク"
-
-#. module: point_of_sale
-#. odoo-javascript
-#: code:addons/point_of_sale/static/src/app/screens/receipt_screen/receipt_screen.xml:0
-msgid "e.g. john.doe@mail.com"
-msgstr "例: john.doe@mail.com"
 
 #. module: point_of_sale
 #: model_terms:ir.ui.view,arch_db:point_of_sale.pos_config_view_form
@@ -8952,7 +9062,7 @@ msgstr "請求書"
 #. odoo-javascript
 #: code:addons/point_of_sale/static/src/app/models/pos_order.js:0
 msgid "the receipt"
-msgstr "領収書"
+msgstr "レシート"
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -8964,19 +9074,3 @@ msgstr "ボタンを有効化します。"
 #: model_terms:ir.ui.view,arch_db:point_of_sale.report_invoice_document
 msgid "using"
 msgstr "を使用して"
-
-#. module: point_of_sale
-#. odoo-javascript
-#: code:addons/point_of_sale/static/src/app/debug/debug_widget.xml:0
-msgid "{{ !barcodeReader ? 'No nomenclature' : '' }}"
-msgstr "{{ !barcodeReader ? 'No nomenclature' : '' }}"
-
-#. module: point_of_sale
-#. odoo-javascript
-#: code:addons/point_of_sale/static/src/app/screens/product_screen/order_summary/order_summary.xml:0
-msgid ""
-"{{ line.has_valid_product_lot() ? 'Valid product lot' : 'Invalid product "
-"lot'}}"
-msgstr ""
-"{{ line.has_valid_product_lot() ? 'Valid product lot' : 'Invalid product "
-"lot'}}"
