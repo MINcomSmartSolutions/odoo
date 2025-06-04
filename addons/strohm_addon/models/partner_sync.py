@@ -45,6 +45,9 @@ class PartnerSync(models.Model):
                 if old_values and partner.id in old_values:
                     old_data = old_values[partner.id]
 
+                # Get user_id if available
+                user_id = partner.user_ids[0].id if partner.user_ids else None
+
                 # Send to backend with consistent format
                 event_type = 'partner_changed'
                 data = {
@@ -52,7 +55,7 @@ class PartnerSync(models.Model):
                     'old_data': UserSync._make_json_serializable(old_data),
                     'new_data': UserSync._make_json_serializable(new_values)
                 }
-                UserSync._send_to_backend(event_type, data)
+                UserSync._send_to_backend(event_type, data, user_id=user_id, partner_id=partner.id)
 
             except Exception as e:
                 _logger.error(f"Failed to sync partner changes for partner {partner.id}: {str(e)}")
@@ -68,14 +71,18 @@ class PartnerSync(models.Model):
 
             UserSync = self.env['strohm_addon.user_sync']
 
+            # Get user_id if available (from the partner_data)
+            user_id = partner_data.get('user_ids', [None])[0]
+            partner_id = partner_data.get('id')
+
             # Format data consistently with other operations
             event_type = 'partner_deleted'
             data = {
-                'record_id': partner_data.get('id'),
+                'record_id': partner_id,
                 'old_data': UserSync._make_json_serializable(partner_data),
                 'new_data': {}
             }
-            UserSync._send_to_backend(event_type, data)
+            UserSync._send_to_backend(event_type, data, user_id=user_id, partner_id=partner_id)
             return True
         except Exception as e:
             _logger.error(f"Failed to sync partner deletion: {str(e)}")

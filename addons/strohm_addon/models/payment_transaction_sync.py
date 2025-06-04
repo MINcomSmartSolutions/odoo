@@ -1,5 +1,4 @@
 import logging
-import os
 from odoo import models, api, _
 from odoo.exceptions import UserError
 
@@ -16,6 +15,22 @@ class PaymentTransactionSync(models.Model):
         try:
             UserSync = self.env['strohm_addon.user_sync']
 
+            # Get user_id and partner_id if available in payment_data
+            user_id = payment_data.get('user_id')
+            partner_id = payment_data.get('partner_id')
+
+            # If we don't have partner_id but have user_id, try to get it
+            if not partner_id and user_id:
+                user = self.env['res.users'].sudo().browse(user_id)
+                if user.exists() and user.partner_id:
+                    partner_id = user.partner_id.id
+
+            # If we have partner_id but don't have user_id, try to get it
+            if not user_id and partner_id:
+                partner = self.env['res.partner'].sudo().browse(partner_id)
+                if partner.exists() and partner.user_ids:
+                    user_id = partner.user_ids[0].id
+
             # Format data consistently with other operations
             event_type = 'payment_rejected'
             data = {
@@ -25,7 +40,7 @@ class PaymentTransactionSync(models.Model):
             }
 
             # Send to backend
-            UserSync._send_to_backend(event_type, data)
+            UserSync._send_to_backend(event_type, data, user_id=user_id, partner_id=partner_id)
 
             # Raise UserError with the rejection reason
             error_message = payment_data.get('state_message') or _("Your payment was rejected. Please try again or use a different payment method.")

@@ -1,6 +1,7 @@
 import os
 
-from odoo import models, api
+from odoo import models, api, _, exceptions
+from odoo.exceptions import ValidationError
 import requests
 import json
 import logging
@@ -20,6 +21,14 @@ class UserSync(models.Model):
         users = self.env['res.users'].sudo().browse(user_ids)
         for user in users:
             try:
+                # Validate that user has a properly set up partner
+                if not user.partner_id:
+                    raise ValidationError(_("User %s (ID: %s) doesn't have an associated partner record. This is required for synchronization.") % (user.name, user.id))
+
+                # Validate partner has essential information
+                if not user.partner_id.name or not user.partner_id.email:
+                    raise ValidationError(_("Partner for user %s (ID: %s) is missing essential information (name or email).") % (user.name, user.id))
+
                 # Get current user data
                 new_values = {
                     'id': user.id,
@@ -27,6 +36,7 @@ class UserSync(models.Model):
                     'name': user.name,
                     'email': user.email,
                     'active': user.active,
+                    'partner_id': user.partner_id.id if user.partner_id else False,
                 }
 
                 # Prepare old values if available
@@ -39,12 +49,18 @@ class UserSync(models.Model):
                 data = {
                     'record_id': user.id,
                     'old_data': self._make_json_serializable(old_data),
-                    'new_data': self._make_json_serializable(new_values)
+                    'new_data': self._make_json_serializable(new_values),
+                    'user_id': user.id,
+                    'partner_id': user.partner_id.id,
                 }
-                self._send_to_backend(event_type, data)
+                self._send_to_backend(event_type, data, user_id=user.id, partner_id=user.partner_id.id)
 
+            except ValidationError as ve:
+                # Re-raise validation errors to be shown to the user
+                raise
             except Exception as e:
                 _logger.error(f"Failed to sync user changes for user {user.id}: {str(e)}")
+                raise ValidationError(_("Failed to sync user changes for user %s: %s") % (user.name, str(e)))
 
         return True
 
@@ -52,14 +68,27 @@ class UserSync(models.Model):
     def sync_user_deletion(self, user_data):
         """Send user deletion to backend system"""
         try:
+            # Make sure partner_id is included if it was in the original data
+            partner_id = user_data.get('partner_id')
+            user_id = user_data.get('id')
+
+            if not partner_id and user_id:
+                # Try to find the partner ID if we have the user ID
+                user = self.env['res.users'].sudo().browse(user_id)
+                if user.exists() and user.partner_id:
+                    partner_id = user.partner_id.id
+                    user_data['partner_id'] = partner_id
+
             # Format data consistently with other operations
             event_type = 'user_deleted'
             data = {
-                'record_id': user_data.get('id'),
+                'record_id': user_id,
                 'old_data': self._make_json_serializable(user_data),
-                'new_data': {}
+                'new_data': {},
+                'user_id': user_id,
+                'partner_id': partner_id,
             }
-            self._send_to_backend(event_type, data)
+            self._send_to_backend(event_type, data, user_id=user_id, partner_id=partner_id)
             return True
         except Exception as e:
             _logger.error(f"Failed to sync user deletion: {str(e)}")
@@ -87,7 +116,7 @@ class UserSync(models.Model):
         else:
             return data
 
-    def _send_to_backend(self, event_type, data):
+    def _send_to_backend(self, event_type, data, user_id=None, partner_id=None):
         """Send data to backend with appropriate event type"""
         backend_url = os.environ.get('BACKEND_HOST', '127.0.0.1')
         backend_port = os.environ.get('BACKEND_PORT', '3000')
@@ -103,8 +132,11 @@ class UserSync(models.Model):
             'Authorization': f'Bearer {api_key}' if api_key else '',
         }
 
+        # Include user_id and partner_id at the top level of the payload
         payload = {
             'event': event_type,
+            'user_id': user_id,
+            'partner_id': partner_id,
             'data': data,
         }
 
