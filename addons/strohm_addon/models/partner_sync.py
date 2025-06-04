@@ -1,4 +1,5 @@
 import logging
+
 from odoo import models, api
 
 _logger = logging.getLogger(__name__)
@@ -16,6 +17,7 @@ class PartnerSync(models.Model):
         UserSync = self.env['strohm_addon.user_sync']
         partners = self.env['res.partner'].sudo().browse(partner_ids)
 
+        # FIXME: Ensure old_values is a dictionary for consistent access. Because some values are defined different or absent in old_values
         for partner in partners:
             try:
                 # Check if partner is associated with portal users

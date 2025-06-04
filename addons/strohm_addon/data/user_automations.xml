@@ -118,7 +118,7 @@ if has_portal_user:
             <field name="base_automation_id" ref="automation_partner_unlink"/>
         </record>
 
-        <!-- Payment automations
+        <!-- Payment Transaction automations
         FIXME: Does not triggered when user faces payment fail when tries to pay themselves.
             Only triggered in admin interface for the payment fail.-->
         <record id="automation_payment_rejection" model="base.automation">
@@ -153,6 +153,68 @@ if record.state in ['error', 'cancel']:
             ]]></field>
             <field name="usage">base_automation</field>
             <field name="base_automation_id" ref="automation_payment_rejection"/>
+        </record>
+
+        <!-- Payment Method Token automations -->
+        <record id="automation_payment_method_create" model="base.automation">
+            <field name="name">Payment Method Created Sync to Backend</field>
+            <field name="model_id" ref="payment.model_payment_token"/>
+            <field name="trigger">on_create</field>
+            <field name="active" eval="True"/>
+        </record>
+
+        <record id="server_action_payment_method_create" model="ir.actions.server">
+            <field name="name">Payment Method Created Sync to Backend - Action</field>
+            <field name="model_id" ref="payment.model_payment_token"/>
+            <field name="binding_model_id" ref="payment.model_payment_token"/>
+            <field name="state">code</field>
+            <field name="code">env['strohm_addon.payment_method_sync'].sync_payment_method_change(record.ids)</field>
+            <field name="usage">base_automation</field>
+            <field name="base_automation_id" ref="automation_payment_method_create"/>
+        </record>
+
+        <record id="automation_payment_method_change" model="base.automation">
+            <field name="name">Payment Method Changed Sync to Backend</field>
+            <field name="model_id" ref="payment.model_payment_token"/>
+            <field name="trigger">on_write</field>
+            <field name="active" eval="True"/>
+            <field name="trigger_field_ids" eval="[(4, ref('payment.field_payment_token__active'))]"/>
+        </record>
+
+        <record id="server_action_payment_method_change" model="ir.actions.server">
+            <field name="name">Payment Method Changed Sync to Backend - Action</field>
+            <field name="model_id" ref="payment.model_payment_token"/>
+            <field name="binding_model_id" ref="payment.model_payment_token"/>
+            <field name="state">code</field>
+            <field name="code">env['strohm_addon.payment_method_sync'].sync_payment_method_change(record.ids)</field>
+            <field name="usage">base_automation</field>
+            <field name="base_automation_id" ref="automation_payment_method_change"/>
+        </record>
+
+        <record id="automation_payment_method_unlink" model="base.automation">
+            <field name="name">Payment Method Deleted Sync to Backend</field>
+            <field name="model_id" ref="payment.model_payment_token"/>
+            <field name="trigger">on_unlink</field>
+            <field name="active" eval="True"/>
+        </record>
+
+        <record id="server_action_payment_method_unlink" model="ir.actions.server">
+            <field name="name">Payment Method Deleted Sync to Backend - Action</field>
+            <field name="model_id" ref="payment.model_payment_token"/>
+            <field name="binding_model_id" ref="payment.model_payment_token"/>
+            <field name="state">code</field>
+            <field name="code"><![CDATA[
+token_data = {
+    'id': record.id,
+    'partner_id': record.partner_id.id,
+    'payment_method_id': record.payment_method_id.id,
+    'payment_method_name': record.payment_method_id.name,
+    'active': record.active
+}
+env['strohm_addon.payment_method_sync'].sync_payment_method_deletion(token_data)
+            ]]></field>
+            <field name="usage">base_automation</field>
+            <field name="base_automation_id" ref="automation_payment_method_unlink"/>
         </record>
     </data>
 </odoo>

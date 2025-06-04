@@ -1,12 +1,15 @@
-import os
-
-from odoo import models, api, _, exceptions
-from odoo.exceptions import ValidationError
-import requests
+import datetime
 import json
 import logging
+import os
+
+import requests
+
+from odoo import models, api, _
+from odoo.exceptions import ValidationError
 
 _logger = logging.getLogger(__name__)
+
 
 class UserSync(models.Model):
     _name = 'strohm_addon.user_sync'
@@ -23,11 +26,15 @@ class UserSync(models.Model):
             try:
                 # Validate that user has a properly set up partner
                 if not user.partner_id:
-                    raise ValidationError(_("User %s (ID: %s) doesn't have an associated partner record. This is required for synchronization.") % (user.name, user.id))
+                    raise ValidationError(
+                        _("User %s (ID: %s) doesn't have an associated partner record. This is required for synchronization.") % (
+                            user.name, user.id))
 
                 # Validate partner has essential information
                 if not user.partner_id.name or not user.partner_id.email:
-                    raise ValidationError(_("Partner for user %s (ID: %s) is missing essential information (name or email).") % (user.name, user.id))
+                    raise ValidationError(
+                        _("Partner for user %s (ID: %s) is missing essential information (name or email).") % (
+                            user.name, user.id))
 
                 # Get current user data
                 new_values = {
@@ -121,19 +128,19 @@ class UserSync(models.Model):
         backend_url = os.environ.get('BACKEND_HOST', '127.0.0.1')
         backend_port = os.environ.get('BACKEND_PORT', '3000')
         backend_url = f"http://{backend_url}:{backend_port}/internal/user/sync"
-        api_key = os.environ.get('BACKEND_API_KEY')
+        api_key = os.environ.get('WEBHOOK_API_KEY')
 
-        if not backend_url:
+        if not backend_url or not backend_url.strip():
             _logger.error("Backend sync URL not configured")
             return False
 
         headers = {
             'Content-Type': 'application/json',
-            'Authorization': f'Bearer {api_key}' if api_key else '',
+            'Authorization': str(api_key.strip()),
         }
 
-        # Include user_id and partner_id at the top level of the payload
         payload = {
+            'timestamp': datetime.datetime.now().isoformat(),
             'event': event_type,
             'user_id': user_id,
             'partner_id': partner_id,
