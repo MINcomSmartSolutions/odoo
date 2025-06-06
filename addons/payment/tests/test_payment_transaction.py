@@ -2,11 +2,10 @@
 
 from unittest.mock import patch
 
+from odoo.addons.payment.tests.common import PaymentCommon
 from odoo.exceptions import AccessError
 from odoo.tests import tagged
 from odoo.tools import mute_logger
-
-from odoo.addons.payment.tests.common import PaymentCommon
 
 
 @tagged('-at_install', 'post_install')
@@ -14,6 +13,8 @@ class TestPaymentTransaction(PaymentCommon):
 
     def test_capture_allowed_for_authorized_users(self):
         """ Test that users who have access to a transaction can capture it. """
+        if not self.env.ref('account.group_account_invoice', raise_if_not_found=False):
+            self.skipTest("account needed for test")
         self.provider.support_manual_capture = 'full_only'
         tx = self._create_transaction('redirect', state='authorized')
         user = self._prepare_user(self.internal_user, 'account.group_account_invoice')
@@ -21,6 +22,8 @@ class TestPaymentTransaction(PaymentCommon):
 
     def test_void_allowed_for_authorized_users(self):
         """ Test that users who have access to a transaction can void it. """
+        if not self.env.ref('account.group_account_invoice', raise_if_not_found=False):
+            self.skipTest("account needed for test")
         self.provider.support_manual_capture = 'full_only'
         tx = self._create_transaction('redirect', state='authorized')
         user = self._prepare_user(self.internal_user, 'account.group_account_invoice')
@@ -28,6 +31,8 @@ class TestPaymentTransaction(PaymentCommon):
 
     def test_refund_allowed_for_authorized_users(self):
         """ Test that users who have access to a transaction can refund it. """
+        if not self.env.ref('account.group_account_invoice', raise_if_not_found=False):
+            self.skipTest("account needed for test")
         self.provider.support_refund = 'full_only'
         tx = self._create_transaction('redirect', state='done')
         user = self._prepare_user(self.internal_user, 'account.group_account_invoice')

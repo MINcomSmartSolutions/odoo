@@ -3,10 +3,9 @@
 import logging
 
 from odoo import _, api, fields, models
-from odoo.exceptions import UserError, ValidationError
-
 from odoo.addons.payment import utils as payment_utils
 from odoo.addons.payment.const import REPORT_REASONS_MAPPING
+from odoo.exceptions import UserError, ValidationError
 
 _logger = logging.getLogger(__name__)
 
@@ -354,6 +353,7 @@ class PaymentProvider(models.Model):
                 _("The following fields must be filled: %s", ", ".join(field_names))
             )
 
+    @api.model
     def _toggle_post_processing_cron(self):
         """ Enable the post-processing cron if some providers are enabled; disable it otherwise.
 
