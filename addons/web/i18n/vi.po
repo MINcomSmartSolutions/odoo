@@ -4552,7 +4552,7 @@ msgstr "Không"
 #: code:addons/web/static/src/views/fields/properties/property_value.js:0
 #: code:addons/web/static/src/views/fields/properties/property_value.xml:0
 msgid "No Access"
-msgstr "Không có quyền truy cập"
+msgstr "Không truy cập"
 
 #. module: web
 #. odoo-javascript

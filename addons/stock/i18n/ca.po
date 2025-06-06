@@ -21,28 +21,28 @@
 # Marc Tormo i Bochaca <mtbochaca@gmail.com>, 2024
 # Martin Trigaux, 2024
 # RGB Consulting <odoo@rgbconsulting.com>, 2024
+# Josep Anton Belchi, 2024
 # Óscar Fonseca <tecnico@pyming.com>, 2024
-# Quim - coopdevs <quim.rebull@coopdevs.org>, 2024
+# Santiago Payà <santiagopim@gmail.com>, 2024
 # Manel Fernandez Ramirez <manelfera@outlook.com>, 2024
 # marcescu, 2024
 # eriiikgt, 2024
-# Harcogourmet, 2024
+# Quim - coopdevs <quim.rebull@coopdevs.org>, 2024
+# Xavier, 2024
+# Noemi Pla, 2025
 # EstudiTIC - estuditic.com <odoo@estuditic.com>, 2025
 # Ivan Espinola, 2025
 # Arnau Ros, 2025
 # jabiri7, 2025
 # Jonatan Gk, 2025
-# Josep Anton Belchi, 2025
-# Noemi Pla, 2025
-# Santiago Payà <santiagopim@gmail.com>, 2025
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-03-19 20:36+0000\n"
+"POT-Creation-Date: 2025-01-27 13:02+0000\n"
 "PO-Revision-Date: 2024-09-25 09:42+0000\n"
-"Last-Translator: Santiago Payà <santiagopim@gmail.com>, 2025\n"
+"Last-Translator: Jonatan Gk, 2025\n"
 "Language-Team: Catalan (https://app.transifex.com/odoo/teams/41243/ca/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -568,39 +568,6 @@ msgid ""
 "</div>\n"
 "        "
 msgstr ""
-"<div style=\"margin: 0px; padding: 0px;\">\n"
-"    <p style=\"margin: 0px; padding: 0px; font-size: 13px;\">\n"
-"        Hola, <t t-out=\"object.partner_id.name or ''\">Brandon Freeman</t>:<br/><br/>\n"
-"        Ens complau informar-lo de què la seva comanda ha estat enviada.\n"
-"        <t t-if=\"hasattr(object, 'carrier_tracking_ref') and object.carrier_tracking_ref\">\n"
-"            La seva referència de seguiment és\n"
-"            <strong>\n"
-"            <t t-if=\"object.carrier_tracking_url\">\n"
-"                <t t-set=\"multiple_carrier_tracking\" t-value=\"object.get_multiple_carrier_tracking()\"/>\n"
-"                <t t-if=\"multiple_carrier_tracking\">\n"
-"                    <t t-foreach=\"multiple_carrier_tracking\" t-as=\"line\">\n"
-"                        <br/><a t-att-href=\"line[1]\" target=\"_blank\" t-out=\"line[0] or ''\"/>\n"
-"                    </t>\n"
-"                </t>\n"
-"                <t t-else=\"\">\n"
-"                    <a t-attf-href=\"{{ object.carrier_tracking_url }}\" target=\"_blank\" t-out=\"object.carrier_tracking_ref or ''\"/>.\n"
-"                </t>\n"
-"            </t>\n"
-"            <t t-else=\"\">\n"
-"                <t t-out=\"object.carrier_tracking_ref or ''\"/>.\n"
-"            </t>\n"
-"            </strong>\n"
-"        </t>\n"
-"        <br/><br/>\n"
-"        Aquí té la comanda de lliurament adjunta per a més informació.<br/><br/>\n"
-"        Gràcies,\n"
-"        <t t-if=\"user.signature\" data-o-mail-quote-container=\"1\">\n"
-"            <br/>\n"
-"            <t t-out=\"user.signature or ''\" data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/>Mitchell Admin</t>\n"
-"        </t>\n"
-"    </p>\n"
-"</div>\n"
-"        "
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.stock_scrap_view_kanban
@@ -740,7 +707,7 @@ msgstr "<span class=\"o_stat_text\">Traçabilitat</span>"
 #: model_terms:ir.ui.view,arch_db:stock.report_delivery_document
 #: model_terms:ir.ui.view,arch_db:stock.report_picking
 msgid "<span><strong>Delivery Address:</strong></span>"
-msgstr "<span><strong>Adreça d'enviament:</strong></span>"
+msgstr "<span><strong>Direcció d'enviament:</strong></span>"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.report_return_slip
@@ -1039,14 +1006,14 @@ msgstr "Afegir una nova ruta"
 #. module: stock
 #: model_terms:ir.actions.act_window,help:stock.action_storage_category
 msgid "Add a new storage category"
-msgstr "Afegeix una nova categoria d'emmagatzematge"
+msgstr "Afegeix una nova categoria d' emmagatzematge"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_picking_form
 msgid ""
 "Add an internal note that will be printed on the Picking Operations sheet"
 msgstr ""
-"Afegir una nota interna que s'imprimirà en el full d'operacions de picking"
+"Afegir una nota interna que s'imprimirà en la fulla d'operacions de picking"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_res_config_settings__group_stock_adv_location
@@ -1302,7 +1269,7 @@ msgstr ""
 #. module: stock
 #: model:ir.model.fields.selection,name:stock.selection__res_company__annual_inventory_month__4
 msgid "April"
-msgstr "Abril"
+msgstr "abril"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.stock_location_route_form_view
@@ -1391,7 +1358,7 @@ msgstr "Atributs"
 #. module: stock
 #: model:ir.model.fields.selection,name:stock.selection__res_company__annual_inventory_month__8
 msgid "August"
-msgstr "Agost"
+msgstr "agost"
 
 #. module: stock
 #: model:ir.model.fields.selection,name:stock.selection__stock_warehouse_orderpoint__trigger__auto
@@ -1967,7 +1934,7 @@ msgstr "Calcula els costos d'enviament i d'enviament amb Sendcloud"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.res_config_settings_view_form
 msgid "Compute shipping costs and ship with Shiprocket"
-msgstr "Calcular cost d'enviament i enviar amb Shiprocket"
+msgstr ""
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.res_config_settings_view_form
@@ -3410,7 +3377,7 @@ msgstr "Favorits"
 #. module: stock
 #: model:ir.model.fields.selection,name:stock.selection__res_company__annual_inventory_month__2
 msgid "February"
-msgstr "Febrer"
+msgstr "febrer"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_res_config_settings__module_delivery_fedex
@@ -3619,7 +3586,7 @@ msgstr "Previsió amb Pendent"
 #: model:ir.model.fields,field_description:stock.field_lot_label_layout__print_format
 #: model:ir.model.fields,field_description:stock.field_product_label_layout__print_format
 msgid "Format"
-msgstr "Format"
+msgstr "Formata"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_replenishment_option__free_qty
@@ -4630,7 +4597,7 @@ msgstr "Gener"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.report_delivery_document
 msgid "John Doe"
-msgstr "John Doe"
+msgstr ""
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_replenishment_info__json_lead_days
@@ -4734,7 +4701,7 @@ msgstr "Última data de recompte"
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_lot__last_delivery_partner_id
 msgid "Last Delivery Partner"
-msgstr "Últim contacte d'entrega"
+msgstr "Última parella de lliurament"
 
 #. module: stock
 #: model:product.removal,name:stock.removal_lifo
@@ -6671,7 +6638,7 @@ msgstr ""
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_picking_type_form
 msgid "Print on Validation"
-msgstr "Imprimir un cop validat"
+msgstr ""
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_picking__printed
@@ -8437,7 +8404,7 @@ msgstr "Enviament: Envia per correu electrònic"
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_res_config_settings__module_delivery_shiprocket
 msgid "Shiprocket Connector"
-msgstr "Connector Shiprocket"
+msgstr ""
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_warehouse__code
@@ -9068,14 +9035,6 @@ msgstr ""
 #. odoo-python
 #: code:addons/stock/models/stock_quant.py:0
 msgid "The Lot/Serial number (%s) is linked to another product."
-msgstr ""
-
-#. module: stock
-#. odoo-python
-#: code:addons/stock/models/stock_picking.py:0
-msgid ""
-"The Picking Operations report has been deleted so you cannot print at this "
-"time unless the report is restored."
 msgstr ""
 
 #. module: stock
@@ -9882,7 +9841,7 @@ msgstr "Informe de traçabilitat"
 #: model:ir.model.fields,field_description:stock.field_product_template__is_storable
 #: model:ir.model.fields,field_description:stock.field_stock_move__is_storable
 msgid "Track Inventory"
-msgstr "Fer seguiment d'inventari"
+msgstr ""
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_res_config_settings__module_product_expiry
@@ -10697,7 +10656,7 @@ msgstr "Quan arriba el producte"
 msgid ""
 "When products are needed in <b>%(destination)s</b>, <br> "
 "<b>%(operation)s</b> are created from <b>%(source_location)s</b> to fulfill "
-"the need. %(suffix)s"
+"the need."
 msgstr ""
 
 #. module: stock
@@ -11448,7 +11407,7 @@ msgstr "p. ex. PO0032"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_location_form
 msgid "e.g. Physical Locations"
-msgstr "e.g. Ubicacions físiques"
+msgstr "p.g. Ubicacions físiques"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_picking_type_form
@@ -11463,12 +11422,12 @@ msgstr ""
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_location_form
 msgid "e.g. Spare Stock"
-msgstr "e.g. S' està reservant la pila principal"
+msgstr "p.g. S' està reservant la pila principal"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.stock_location_route_form_view
 msgid "e.g. Two-steps reception"
-msgstr "e.g. recepció de dos passos"
+msgstr "p.g. recepció de dos passos"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.res_config_settings_view_form

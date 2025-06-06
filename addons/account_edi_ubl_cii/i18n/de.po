@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-30 18:36+0000\n"
+"POT-Creation-Date: 2025-02-10 13:23+0000\n"
 "PO-Revision-Date: 2024-09-25 09:41+0000\n"
 "Last-Translator: Larissa Manderfeld, 2025\n"
 "Language-Team: German (https://app.transifex.com/odoo/teams/41243/de/)\n"
@@ -24,11 +24,11 @@ msgstr ""
 #. odoo-python
 #: code:addons/account_edi_ubl_cii/models/account_edi_xml_ubl_bis3.py:0
 msgid ""
-"%s should have a KVK or OIN number set in Company ID field or as Peppol "
-"e-address (EAS code 0106 or 0190)."
+"%s should have a KVK or OIN number: the Peppol e-address (EAS) should be "
+"'0106' or '0190'."
 msgstr ""
-"%s sollte eine KVK- oder OIN-Nummer im Feld „Unternehmens-ID“ oder als "
-"Peppol-E-Adresse (EAS-Code 0106 oder 0190) haben."
+"%s sollte eine KVK- oder OIN-Nummer haben: die Peppol-E-Adresse (EAS) sollte"
+" „0106“ oder „0190“ sein."
 
 #. module: account_edi_ubl_cii
 #: model_terms:ir.ui.view,arch_db:account_edi_ubl_cii.account_invoice_pdfa_3_facturx_metadata
@@ -130,8 +130,8 @@ msgstr "Belgisches Unternehmensregister"
 
 #. module: account_edi_ubl_cii
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__res_partner__peppol_eas__9925
-msgid "Belgian VAT"
-msgstr "Belgien - MwSt."
+msgid "Belgian VAT number"
+msgstr "Belgische MwSt.-Nummer"
 
 #. module: account_edi_ubl_cii
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__res_partner__peppol_eas__9924
@@ -147,6 +147,12 @@ msgstr "Bulgarien - MwSt."
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__res_partner__peppol_eas__9913
 msgid "Business Registers Network"
 msgstr "Netzwerk der Unternehmensregister"
+
+#. module: account_edi_ubl_cii
+#. odoo-python
+#: code:addons/account_edi_ubl_cii/models/account_move_send.py:0
+msgid "Check Invoice(s)"
+msgstr "Rechnung(en) prüfen"
 
 #. module: account_edi_ubl_cii
 #. odoo-python
@@ -605,11 +611,6 @@ msgid "Peppol Endpoint"
 msgstr "Peppol Endpoint"
 
 #. module: account_edi_ubl_cii
-#: model_terms:ir.ui.view,arch_db:account_edi_ubl_cii.view_partner_property_form
-msgid "Peppol ID"
-msgstr "Peppol-ID"
-
-#. module: account_edi_ubl_cii
 #: model:ir.model.fields,field_description:account_edi_ubl_cii.field_res_partner__peppol_eas
 #: model:ir.model.fields,field_description:account_edi_ubl_cii.field_res_users__peppol_eas
 msgid "Peppol e-address (EAS)"
@@ -618,18 +619,26 @@ msgstr "Peppol E-Adresse (EAS)"
 #. module: account_edi_ubl_cii
 #. odoo-python
 #: code:addons/account_edi_ubl_cii/models/account_move_send.py:0
-msgid "Please fill in partner's VAT or Peppol Address."
-msgstr "Füllen Sie die USt-IdNr. oder Peppol-Adresse des Partners aus"
+msgid ""
+"Please add a Recipient bank in the 'Other Info' tab to generate a complete "
+"file."
+msgstr ""
+"Bitte fügen Sie im Reiter „Weitere Informationen“ eine Empfängerbank hinzu, "
+"um eine vollständige Datei zu erstellen."
 
 #. module: account_edi_ubl_cii
 #. odoo-python
 #: code:addons/account_edi_ubl_cii/models/account_move_send.py:0
-msgid ""
-"Please fill in your company's VAT or Peppol Address to generate a complete "
-"XML file."
+msgid "Please configure your company to generate a complete XML file."
 msgstr ""
-"Füllen Sie die USt-IdNr. oder Peppol-Adresse Ihres Unternehmens aus, um eine"
-" vollständige XML-Datei zu generieren."
+"Bitte konfigurieren Sie Ihr Unternehmen, um eine vollständige XML-Datei zu "
+"generieren."
+
+#. module: account_edi_ubl_cii
+#. odoo-python
+#: code:addons/account_edi_ubl_cii/models/account_move_send.py:0
+msgid "Please fill in your VAT or Peppol Address"
+msgstr "Füllen Sie Ihre USt-IdNr. oder Peppol-Adresse aus"
 
 #. module: account_edi_ubl_cii
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__res_partner__peppol_eas__9945
@@ -640,11 +649,6 @@ msgstr "Polen - MwSt."
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__res_partner__peppol_eas__9946
 msgid "Portugal VAT"
 msgstr "Portugal - MwSt."
-
-#. module: account_edi_ubl_cii
-#: model:ir.model,name:account_edi_ubl_cii.model_ir_actions_report
-msgid "Report Action"
-msgstr "Berichtsaktion"
 
 #. module: account_edi_ubl_cii
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__res_partner__peppol_eas__9947
@@ -872,6 +876,12 @@ msgstr "Vereinigtes Königreich - MwSt."
 #: model:ir.model.fields.selection,name:account_edi_ubl_cii.selection__res_partner__peppol_eas__9953
 msgid "Vatican VAT"
 msgstr "Vatikan - MwSt."
+
+#. module: account_edi_ubl_cii
+#. odoo-python
+#: code:addons/account_edi_ubl_cii/models/account_move_send.py:0
+msgid "View Invoice(s)"
+msgstr "Rechnung(en) anzeigen"
 
 #. module: account_edi_ubl_cii
 #. odoo-python

@@ -1451,7 +1451,7 @@ msgstr ""
 #: code:addons/web/static/src/views/kanban/kanban_controller.js:0
 #: code:addons/web/static/src/views/list/list_controller.js:0
 msgid "Bye-bye, record!"
-msgstr "Pa-pa, zapisu!"
+msgstr ""
 
 #. module: web
 #. odoo-javascript
@@ -5422,10 +5422,6 @@ msgid ""
 "\n"
 "Think twice before you click that 'Delete' button!"
 msgstr ""
-"Jeste li spremni na činjenicu da će vaš zapis nestati? Jeste li sigurni?\n"
-"Nestat će zauvijek!\n"
-"\n"
-"Razmislite dvaput prije nego što kliknete gumb \"Briši\"!"
 
 #. module: web
 #. odoo-javascript
