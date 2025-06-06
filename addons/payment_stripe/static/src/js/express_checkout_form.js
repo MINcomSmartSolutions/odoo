@@ -17,7 +17,12 @@ paymentExpressCheckoutForm.include({
      */
     _getOrderDetails(deliveryAmount, amountFreeShipping) {
         const pending = this.paymentContext['shippingInfoRequired'] && deliveryAmount === undefined;
+        const orderDeliveryAmount = parseInt(this.paymentContext['deliveryAmount'])
         let minorAmount = parseInt(this.paymentContext['minorAmount'])
+        if (orderDeliveryAmount) { // The delivery method is set on the order.
+            // Subtract the delivery amount from the total amount to display the right total.
+            minorAmount -= orderDeliveryAmount;
+        }
         const displayItems = [
             {
                 label: _t("Your order"),
@@ -164,7 +169,7 @@ paymentExpressCheckoutForm.include({
             // shipping address, the shipping options need to be fetched again.
             paymentRequest.on('shippingaddresschange', async (ev) => {
                 // Call the shipping address update route to fetch the shipping options.
-                const availableCarriersData = await rpc(
+                const availableCarriers = await rpc(
                     this.paymentContext['shippingAddressUpdateRoute'],
                     {
                         partial_delivery_address: {
@@ -175,22 +180,18 @@ paymentExpressCheckoutForm.include({
                         },
                     },
                 );
-                const { delivery_methods, delivery_discount_minor_amount } = availableCarriersData;
-                if (delivery_methods.length === 0) {
+                if (availableCarriers.length === 0) {
                     ev.updateWith({status: 'invalid_shipping_address'});
                 } else {
                     ev.updateWith({
                         status: 'success',
-                        shippingOptions: delivery_methods.map(carrier => ({
+                        shippingOptions: availableCarriers.map(carrier => ({
                             id: String(carrier.id),
                             label: carrier.name,
                             detail: carrier.description ? carrier.description:'',
                             amount: carrier.minorAmount,
                         })),
-                        ...this._getOrderDetails(
-                            delivery_methods[0].minorAmount,
-                            delivery_discount_minor_amount,
-                        ),
+                        ...this._getOrderDetails(availableCarriers[0].minorAmount),
                     });
                 }
             });
