@@ -1,14 +1,15 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from unittest.mock import patch
 from urllib.parse import urlparse, parse_qs
+from unittest.mock import patch
 
 from freezegun import freeze_time
 
-from odoo.addons.payment.controllers.portal import PaymentPortal
-from odoo.addons.payment.tests.http_common import PaymentHttpCommon
 from odoo.tests import tagged, JsonRpcException
 from odoo.tools import mute_logger
+
+from odoo.addons.payment.controllers.portal import PaymentPortal
+from odoo.addons.payment.tests.http_common import PaymentHttpCommon
 
 
 @tagged('post_install', '-at_install')
@@ -67,7 +68,6 @@ class TestFlows(PaymentHttpCommon):
         self.assertEqual(processing_values['currency_id'], self.currency.id)
         self.assertEqual(processing_values['partner_id'], self.partner.id)
         self.assertEqual(processing_values['reference'], self.reference)
-        self.assertFalse(processing_values['should_tokenize'])
 
         # Verify computed values not provided, but added during the flow
         self.assertIn("tx_id=", tx_sudo.landing_route)

@@ -1,10 +1,11 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import Command, _, api, fields, models
-from odoo.addons.payment import utils as payment_utils
-from odoo.addons.payment.const import REPORT_REASONS_MAPPING
 from odoo.exceptions import UserError
 from odoo.osv import expression
+
+from odoo.addons.payment import utils as payment_utils
+from odoo.addons.payment.const import REPORT_REASONS_MAPPING
 
 
 class PaymentMethod(models.Model):
@@ -196,12 +197,6 @@ class PaymentMethod(models.Model):
                     ))
 
         return super().write(values)
-
-    @api.ondelete(at_uninstall=False)
-    def _unlink_if_not_default_payment_method(self):
-        payment_method_unknown = self.env.ref('payment.payment_method_unknown')
-        if payment_method_unknown in self:
-            raise UserError(_("You cannot delete the default payment method."))
 
     # === BUSINESS METHODS === #
 
