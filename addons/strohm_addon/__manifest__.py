@@ -27,6 +27,7 @@
         'security/ir.model.access.csv',
         'data/user_automations.xml',
         'data/partner_user_integrity_cron.xml'
+        'data/uom_data.xml'
     ],
     'external_dependencies': {
         'python': [

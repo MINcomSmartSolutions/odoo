@@ -1,0 +1,9 @@
+#. module: strohm_addon
+#: model:uom.category,name:strohm_addon.uom_categ_energy
+msgid "Energy"
+msgstr "Energie"
+
+#. module: strohm_addon
+#: model:uom.uom,name:strohm_addon.product_uom_kwh
+msgid "kWh"
+msgstr "kWh"

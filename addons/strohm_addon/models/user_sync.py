@@ -136,7 +136,7 @@ class UserSync(models.Model):
 
         headers = {
             'Content-Type': 'application/json',
-            'Authorization': str(api_key.strip()),
+            'Authorization': api_key,
         }
 
         payload = {
