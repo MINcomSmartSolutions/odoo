@@ -1,7 +1,7 @@
-from odoo import models, fields, api, _
-from odoo.exceptions import UserError, ValidationError
 import logging
 
+from odoo import models, fields, api, _
+from odoo.exceptions import UserError, ValidationError
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 
 _logger = logging.getLogger(__name__)
@@ -123,12 +123,13 @@ class ChargingSessionInvoice(models.TransientModel):
                     [('code', '=', 'DE')], limit=1)
 
                 # Use ref when possible instead of search
-                tax = self.env.ref('l10n_de.tax_sale_19', raise_if_not_found=False) or self.env.ref[
-                    'account.tax'].search([
-                    ('amount', '=', 19),
-                    ('price_include', '=', True),
-                    ('country_id', '=', country.id),
-                ], limit=1)
+                tax = self.env.ref('l10n_de.tax_sale_19', raise_if_not_found=False)
+                if not tax:
+                    tax = self.env['account.tax'].search([
+                        ('amount', '=', 19),
+                        ('price_include', '=', True),
+                        ('country_id', '=', country.id),
+                    ], limit=1)
 
                 if not tax:
                     raise UserError(

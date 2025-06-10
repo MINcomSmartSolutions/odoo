@@ -12,14 +12,14 @@
     'author': 'MINcom Smart Solutions GmbH',
     'website': 'https://min2sol.com',
     'depends': [
+        'account',
         'base',
+        'base_automation',
         'l10n_de',
         'portal',
-        'account',
-        'account',
         'payment',
         'payment_stripe',
-        'base_automation',
+        'sale'
     ],
     'data': [
         'views/portal_templates.xml',
